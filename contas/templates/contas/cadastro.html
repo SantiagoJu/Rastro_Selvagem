@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Rastro Selvagem</title>
+    <style>
+        /* Reset básico */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Fundo da página com tema de natureza leve */
+        body {
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* O "Card" branco onde o formulário fica */
+        .login-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        /* Cabeçalhos */
+        .login-container h1 {
+            color: #2c5e3b; /* Verde floresta */
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .login-container p.subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        /* Estilizando o formulário gerado pelo Django (form.as_p) */
+        form p {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        form label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #444;
+        }
+
+        /* Estilizando os inputs e selects padrão */
+        form input[type="text"],
+        form input[type="password"],
+        form input[type="email"],
+        form select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        form input:focus,
+        form select:focus {
+            outline: none;
+            border-color: #2c5e3b;
+            box-shadow: 0 0 0 3px rgba(44, 94, 59, 0.1);
+        }
+
+        /* Oculta os textos de ajuda verbosos do Django para manter o visual limpo */
+        form span.helptext {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* Estilizando listas de erros do formulário */
+        ul.errorlist {
+            color: #d32f2f;
+            list-style-type: none;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            padding: 0;
+        }
+
+        /* Botão de submit */
+        button[type="submit"] {
+            width: 100%;
+            background-color: #2c5e3b;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #1f4229;
+        }
+
+        /* Link de voltar */
+        .footer-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.95rem;
+        }
+
+        .footer-link a {
+            color: #2c5e3b;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h1>Rastro Selvagem</h1>
+        <p class="subtitle">Crie sua conta para acessar o Backlog</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <!-- O Django renderiza as tags <p>, <label> e <input> aqui, e nosso CSS captura elas automaticamente -->
+            {{ form.as_p }}
+            
+            <button type="submit">Finalizar Cadastro</button>
+        </form>
+        
+        <div class="footer-link">
+            <p>Já tem uma conta? <a href="{% url 'login' %}">Faça o login aqui</a></p>
+        </div>
+    </div>
+
+</body>
+</html>
