@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'contas',
+    'criterios_epicos',
+    'projeto_backlog',
 ]
 
 MIDDLEWARE = [
