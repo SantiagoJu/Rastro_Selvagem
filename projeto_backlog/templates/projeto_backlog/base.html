@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Rastro Selvagem</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vinho: #4f000b;
+            --vinho-escuro: #36000a;
+            --creme: #fef8f2;
+            --pessego: #f9dfcb;
+            --verde-claro: #e9ede1;
+            --verde-botao: #c9d8b9;
+            --verde-botao-hover: #b9cca6;
+            --rosa-ajuda: #e8ada3;
+            --texto: #4a4a4a;
+            --texto-suave: #6b6b6b;
+            --borda: #d9d0c8;
+            --borda-campo: #7a7a7a;
+            --erro: #b3261e;
+
+            /* Aliases para templates antigos que usam estes nomes */
+            --surface: var(--creme);
+            --text: var(--texto);
+            --text-muted: var(--texto-suave);
+            --primary: var(--vinho);
+            --border: var(--borda);
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--creme);
+            color: var(--texto);
+        }
+
+        a { color: inherit; }
+
+        .app {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Barra lateral */
+        .sidebar {
+            background: var(--pessego);
+            padding: 32px 20px 24px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 4px;
+            text-decoration: none;
+            color: var(--vinho);
+        }
+
+        .sidebar-brand svg { width: 28px; height: 28px; fill: var(--vinho); flex-shrink: 0; }
+        .sidebar-brand span { font-size: 1.35rem; font-weight: 700; line-height: 1.15; }
+
+        .workspace { margin-top: 48px; padding: 0 4px; }
+        .workspace .label { font-size: 0.75rem; font-weight: 500; color: var(--vinho); text-transform: uppercase; }
+        .workspace .name { margin-top: 14px; font-size: 1.1rem; font-weight: 700; color: var(--vinho); }
+        .workspace .term { margin-top: 10px; font-size: 0.95rem; color: var(--texto-suave); }
+
+        .nav { margin-top: 56px; display: flex; flex-direction: column; gap: 10px; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            color: var(--texto);
+            transition: background-color 0.2s ease;
+        }
+
+        .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
+        .nav-link:hover { background: rgba(79, 0, 11, 0.08); }
+        .nav-link.active { background: var(--vinho); color: #fff; font-weight: 500; }
+
+        .help-card {
+            margin-top: auto;
+            background: var(--rosa-ajuda);
+            border-radius: 12px;
+            padding: 18px 16px;
+        }
+
+        .help-card svg { width: 20px; height: 20px; stroke: var(--vinho); fill: none; stroke-width: 1.6; }
+        .help-card .title { margin-top: 16px; font-size: 1rem; font-weight: 700; color: var(--vinho); }
+        .help-card .text { margin-top: 8px; font-size: 0.85rem; line-height: 1.7; color: var(--texto); }
+        .help-card a { display: inline-block; margin-top: 2px; font-size: 0.85rem; font-weight: 700; color: var(--vinho); text-decoration: none; }
+        .help-card a:hover { text-decoration: underline; }
+
+        .sidebar-footer { margin-top: 24px; padding: 0 4px; font-size: 0.75rem; color: var(--texto-suave); }
+
+        /* Barra superior */
+        .topbar {
+            height: 79px;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--borda);
+        }
+
+        .topbar-crumb { font-size: 1rem; color: var(--texto); }
+        .topbar-crumb span { margin: 0 6px; }
+
+        .topbar-user { display: flex; align-items: center; gap: 40px; }
+        .topbar-user .bell { width: 20px; height: 20px; stroke: var(--texto); fill: none; stroke-width: 1.6; }
+        .user-info { display: flex; align-items: center; gap: 56px; }
+        .user-name { font-size: 0.95rem; font-weight: 600; color: var(--vinho); }
+        .user-role { font-size: 0.8rem; color: var(--texto-suave); margin-top: 2px; }
+        .user-info .chevron { width: 16px; height: 16px; stroke: var(--vinho); fill: none; stroke-width: 2; }
+
+        /* Conteúdo */
+        .content { padding: 40px; }
+
+        .eyebrow { font-size: 0.8rem; color: var(--vinho); text-transform: uppercase; }
+        .page-title { margin-top: 28px; font-size: 1.9rem; font-weight: 700; color: var(--vinho); }
+        .page-subtitle { margin-top: 18px; font-size: 1.1rem; color: var(--texto); }
+
+        .split {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            padding: 24px;
+            background: var(--creme);
+        }
+
+        .card-title { font-size: 1.3rem; font-weight: 700; color: var(--vinho); }
+
+        .side-card {
+            background: var(--verde-claro);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .side-card h2 { font-size: 1.3rem; font-weight: 700; color: var(--vinho); }
+        .side-card h3 { margin-top: 36px; font-size: 0.9rem; font-weight: 700; color: var(--vinho); }
+        .side-card p { margin-top: 14px; font-size: 1rem; line-height: 1.5; color: var(--texto); }
+
+        /* Formulário */
+        .field { margin-top: 32px; }
+        .field label { display: block; margin-bottom: 14px; font-size: 0.95rem; font-weight: 600; color: var(--texto); }
+
+        .field input[type="text"],
+        .field input[type="email"],
+        .field input[type="number"],
+        .field select,
+        .field textarea {
+            width: 100%;
+            height: 43px;
+            padding: 0 12px;
+            border: 1px solid var(--borda-campo);
+            border-radius: 8px;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--texto);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .field textarea { height: auto; padding: 10px 12px; }
+
+        .field select, .select {
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 38px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f000b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 12px;
+            cursor: pointer;
+        }
+
+        .readonly-box {
+            display: flex;
+            align-items: center;
+            min-height: 43px;
+            padding: 0 14px;
+            border: 1px solid var(--borda-campo);
+            border-radius: 8px;
+            background: var(--verde-claro);
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--texto);
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: var(--vinho);
+            box-shadow: 0 0 0 3px rgba(79, 0, 11, 0.12);
+        }
+
+        .field .helptext { display: block; margin-top: 18px; font-size: 0.85rem; color: var(--texto-suave); }
+        .field.has-error input { border-color: var(--erro); }
+
+        ul.errorlist { list-style: none; margin-top: 8px; font-size: 0.85rem; color: var(--erro); }
+        .form-errors { margin-top: 20px; }
+
+        .subsection-title { margin-top: 36px; font-size: 1.3rem; font-weight: 700; color: var(--vinho); }
+
+        .backlog-list { list-style: none; margin-top: 18px; }
+        .backlog-list li {
+            height: 40px;
+            margin-bottom: 6px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--texto);
+        }
+        .backlog-list li:nth-child(odd) { background: var(--verde-claro); }
+
+        .form-actions { margin-top: 40px; display: flex; gap: 24px; flex-wrap: wrap; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 208px;
+            height: 44px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-primary { background: var(--verde-botao); border: 1px solid var(--verde-botao); color: var(--vinho); }
+        .btn-primary:hover { background: var(--verde-botao-hover); }
+        .btn-secondary { background: transparent; border: 1px solid var(--vinho); color: var(--vinho); }
+        .btn-secondary:hover { background: rgba(79, 0, 11, 0.06); }
+        .btn-sm { width: auto; height: 34px; padding: 0 14px; font-size: 0.85rem; }
+        .btn-danger { background: transparent; border: 1px solid var(--erro); color: var(--erro); }
+        .btn-danger:hover { background: rgba(179, 38, 30, 0.08); }
+        .btn-perigo { background: #c4382a; border: 1px solid #c4382a; color: #fff; }
+        .btn-perigo:hover { background: #a82f23; border-color: #a82f23; }
+
+        /* Janela de confirmação */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(79, 0, 11, 0.38);
+        }
+        .modal-dialog {
+            width: 100%;
+            max-width: 560px;
+            padding: 32px;
+            background: var(--creme);
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        }
+        .modal-title { font-size: 1.3rem; font-weight: 700; color: var(--vinho); }
+        .modal-text { margin-top: 18px; font-size: 1rem; line-height: 1.6; color: var(--texto); }
+        .modal-error { margin-top: 14px; padding: 10px 14px; border-radius: 8px; background: #f6d9d6; color: var(--erro); font-size: 0.9rem; }
+        .modal-actions { margin-top: 28px; display: flex; justify-content: flex-end; gap: 12px; }
+        @media (max-width: 960px) {
+            .modal-actions { flex-direction: column-reverse; }
+            .modal-actions .btn { width: 100%; }
+        }
+
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+        .page-header .btn { margin-top: 28px; }
+        .btn:focus-visible, .nav-link:focus-visible { outline: 3px solid rgba(79, 0, 11, 0.35); outline-offset: 2px; }
+
+        .table-wrap { margin-top: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--texto-suave);
+            border-bottom: 1px solid var(--borda);
+        }
+        td { padding: 14px 16px; color: var(--texto); vertical-align: middle; }
+        tbody tr:nth-child(odd) { background: var(--verde-claro); }
+        td.empty-row { text-align: center; color: var(--texto-suave); }
+        .row-actions { display: flex; gap: 8px; }
+        .col-actions { width: 180px; }
+
+        .messages { list-style: none; margin-bottom: 24px; }
+        .messages li { padding: 12px 16px; border-radius: 8px; background: var(--verde-claro); color: var(--vinho); font-size: 0.9rem; margin-bottom: 8px; }
+        .messages li.error { background: #f6d9d6; color: var(--erro); }
+
+        /* Telas menores */
+        @media (max-width: 960px) {
+            .app { grid-template-columns: 1fr; }
+            .sidebar { position: static; height: auto; padding: 20px; }
+            .workspace { margin-top: 24px; }
+            .nav { margin-top: 24px; }
+            .help-card { display: none; }
+            .topbar { padding: 0 20px; }
+            .user-info { gap: 20px; }
+            .content { padding: 28px 20px; }
+            .split { grid-template-columns: 1fr; }
+            .btn { width: 100%; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+        <a class="sidebar-brand" href="{% url 'projeto_backlog:projeto_list' %}">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+                <ellipse cx="11" cy="28" rx="6.5" ry="8.5" transform="rotate(-20 11 28)"/>
+                <ellipse cx="25" cy="14" rx="6.5" ry="9"/>
+                <ellipse cx="41" cy="14" rx="6.5" ry="9"/>
+                <ellipse cx="55" cy="28" rx="6.5" ry="8.5" transform="rotate(20 55 28)"/>
+                <path d="M32 29c-9 0-18 10-18 19 0 6 4 9 10 9 3 0 5-1 8-1s5 1 8 1c6 0 10-3 10-9 0-9-9-19-18-19z"/>
+            </svg>
+            <span>Rastro<br>Selvagem</span>
+        </a>
+
+        <div class="workspace">
+            <p class="label">Espaço da ONG</p>
+            <p class="name">Resgate e reabilitação</p>
+            <p class="term">Semestre 2026.2</p>
+        </div>
+
+        {% with nome=request.resolver_match.url_name|default:'' %}
+        <nav class="nav" aria-label="Navegação principal">
+            {# Troque os href="#" pelas suas URLs quando tiver os nomes #}
+            <a class="nav-link{% block nav_geral %}{% endblock %}" href="#">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
+                Visão geral
+            </a>
+            <a class="nav-link{% block nav_backlog %}{% endblock %}" href="#">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
+                Backlog
+            </a>
+            <a class="nav-link" href="#">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
+                Quadro Kanban
+            </a>
+            <a class="nav-link{% block nav_epicos %}{% endblock %}" href="#">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
+                Épicos
+            </a>
+            <a class="nav-link{% block nav_projetos %}{% if 'projeto' in nome %} active{% endif %}{% endblock %}" href="{% url 'projeto_backlog:projeto_list' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
+                Meus projetos
+            </a>
+        </nav>
+        {% endwith %}
+
+        <div class="help-card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
+            <p class="title">Novo na equipe?</p>
+            <p class="text">Entenda o fluxo<br>em poucos passos.</p>
+            <a href="#">Abrir guia &rarr;</a>
+        </div>
+
+        <p class="sidebar-footer">Rastro Selvagem &middot; v1.0</p>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-crumb">{% block breadcrumb %}{% endblock %}</div>
+
+            <div class="topbar-user">
+                <svg class="bell" viewBox="0 0 24 24" aria-label="Notificações"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>
+                <div class="user-info">
+                    <div>
+                        <p class="user-name">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        {# Troque pelo campo de cargo do seu usuário, se existir #}
+                        <p class="user-role">Coordenação de TI</p>
+                    </div>
+                    <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li class="{{ message.tags }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+</div>
+
+</body>
+</html>

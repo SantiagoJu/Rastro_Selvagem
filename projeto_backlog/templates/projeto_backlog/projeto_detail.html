@@ -1,0 +1,127 @@
+{% extends 'projeto_backlog/base.html' %}
+
+{% block title %}{{ projeto.nome }}{% endblock %}
+
+{% block breadcrumb %}<a href="{% url 'projeto_backlog:projeto_list' %}">Projetos</a> <span>/</span> {{ projeto.nome }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topbar-crumb a { text-decoration: none; }
+    .topbar-crumb a:hover { text-decoration: underline; }
+
+    .header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .header-actions .btn { width: auto; padding: 0 24px; }
+
+    .card + .card { margin-top: 24px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--vinho);
+    }
+    .badge-product { background: var(--verde-botao); }
+    .badge-sprint { background: var(--pessego); }
+
+    @media (max-width: 960px) {
+        .header-actions .btn { margin-top: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Rastro Selvagem / Projetos</p>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ projeto.nome }}</h1>
+        <p class="page-subtitle">Backlogs e épicos deste projeto.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'projeto_backlog:backlog_create' %}" class="btn btn-primary">Criar backlog</a>
+        <a href="{% url 'projeto_backlog:projeto_update' projeto.pk %}" class="btn btn-secondary">Editar projeto</a>
+    </div>
+</div>
+
+<div style="margin-top: 40px;">
+    <section class="card">
+        <h2 class="card-title">Backlogs vinculados</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome do backlog</th>
+                        <th>Tipo</th>
+                        <th class="col-actions">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for backlog in projeto.backlogs.all %}
+                    <tr>
+                        <td><strong>{{ backlog.nome }}</strong></td>
+                        <td>
+                            {% if backlog.tipo == "PRODUCT" %}
+                                <span class="badge badge-product">{{ backlog.get_tipo_display }}</span>
+                            {% else %}
+                                <span class="badge badge-sprint">{{ backlog.get_tipo_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <a href="{% url 'backlog_update' backlog.pk %}" class="btn btn-secondary btn-sm">Editar</a>
+                                <a href="{% url 'backlog_delete' backlog.pk %}" class="btn btn-danger btn-sm">Excluir</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="empty-row">Nenhum backlog associado a este projeto ainda.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+            <h2 class="card-title">Épicos do projeto</h2>
+            <a href="{% url 'criterios_epicos:epico_create' %}" class="btn btn-secondary btn-sm">Novo épico</a>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrição</th>
+                        <th class="col-actions">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for epico in projeto.epicos.all %}
+                    <tr>
+                        <td><strong>{{ epico.nome }}</strong></td>
+                        <td>{{ epico.descricao|default:"-"|truncatechars:50 }}</td>
+                        <td>
+                            <div class="row-actions">
+                                <a href="{% url 'criterios_epicos:epico_update' epico.pk %}" class="btn btn-secondary btn-sm">Editar</a>
+                                <a href="{% url 'criterios_epicos:epico_delete' epico.pk %}" class="btn btn-danger btn-sm">Excluir</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="empty-row">Nenhum épico cadastrado neste projeto.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

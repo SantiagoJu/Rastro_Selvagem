@@ -1,0 +1,166 @@
+{% extends 'projeto_backlog/base.html' %}
+ 
+{% block title %}Meus projetos{% endblock %}
+ 
+{% block breadcrumb %}Projetos <span>/</span> Meus projetos{% endblock %}
+ 
+{% block extra_css %}
+<style>
+    .search-block { margin-top: 40px; }
+    .search-block label { display: block; margin-bottom: 14px; font-size: 0.95rem; font-weight: 600; color: var(--texto); }
+    .search-row { display: flex; align-items: center; gap: 24px; }
+    .search-input {
+        flex: 1;
+        max-width: 720px;
+        height: 43px;
+        padding: 0 12px;
+        border: 1px solid var(--borda-campo);
+        border-radius: 8px;
+        background: transparent;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--texto);
+    }
+    .search-input::placeholder { color: var(--texto); opacity: 0.8; }
+    .search-input:focus { outline: none; border-color: var(--vinho); box-shadow: 0 0 0 3px rgba(79, 0, 11, 0.12); }
+    .search-count { margin-left: auto; width: 208px; font-size: 0.85rem; color: var(--texto-suave); }
+ 
+    .project-grid {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+ 
+    .project-card {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        background: var(--creme);
+        overflow: hidden;
+    }
+    .project-card[hidden] { display: none; }
+ 
+    .project-bar { height: 12px; background: var(--verde-botao); }
+    .project-body { flex: 1; display: flex; flex-direction: column; padding: 24px; }
+ 
+    .project-code { font-size: 0.8rem; color: var(--vinho); text-transform: uppercase; }
+    .project-name { margin-top: 18px; font-size: 1.4rem; font-weight: 700; line-height: 1.25; color: var(--vinho); }
+    .project-desc { flex: 1; margin-top: 36px; min-height: 52px; font-size: 1rem; line-height: 1.5; color: var(--texto); }
+ 
+    .project-stats { margin-top: 32px; font-size: 0.95rem; font-weight: 600; color: var(--texto); }
+    .project-meta { margin-top: 14px; font-size: 0.8rem; color: var(--texto-suave); }
+ 
+    .project-open {
+        margin-top: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        border-radius: 8px;
+        background: var(--verde-botao);
+        color: var(--vinho);
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+    .project-open:hover { background: var(--verde-botao-hover); }
+    .project-open:focus-visible { outline: 3px solid rgba(79, 0, 11, 0.35); outline-offset: 2px; }
+ 
+    .project-links { margin-top: 14px; display: flex; gap: 18px; justify-content: center; font-size: 0.8rem; }
+    .project-links a { color: var(--vinho); text-decoration: none; }
+    .project-links a.danger { color: var(--erro); }
+    .project-links a:hover { text-decoration: underline; }
+ 
+    .list-note { margin-top: 40px; font-size: 0.9rem; color: var(--texto); }
+ 
+    .empty { margin-top: 40px; text-align: center; padding: 48px 24px; }
+    .empty h3 { color: var(--vinho); font-size: 1.3rem; }
+    .empty p { margin: 8px 0 24px; color: var(--texto-suave); }
+    .empty .btn { margin: 0 auto; }
+ 
+    @media (max-width: 960px) {
+        .search-row { flex-direction: column; align-items: stretch; gap: 12px; }
+        .search-input { max-width: none; }
+        .search-count { margin-left: 0; width: auto; }
+        .page-header .btn { margin-top: 0; }
+    }
+</style>
+{% endblock %}
+ 
+{% block content %}
+<p class="eyebrow">Rastro Selvagem / Projetos</p>
+ 
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Meus projetos</h1>
+        <p class="page-subtitle">Organize o trabalho que transforma o cuidado com a fauna.</p>
+    </div>
+    <a href="{% url 'projeto_backlog:projeto_create' %}" class="btn btn-primary">Criar projeto</a>
+</div>
+ 
+{% if projetos %}
+    <div class="search-block">
+        <label for="busca-projetos">Buscar projetos</label>
+        <div class="search-row">
+            <input type="search" id="busca-projetos" class="search-input" placeholder="Buscar por nome..." autocomplete="off">
+            <p class="search-count" id="contador-projetos" aria-live="polite">{{ projetos|length }} projeto{{ projetos|length|pluralize }}</p>
+        </div>
+    </div>
+ 
+    <div class="project-grid">
+        {% for projeto in projetos %}
+        <article class="project-card" data-nome="{{ projeto.nome|lower }}">
+            <div class="project-bar"></div>
+            <div class="project-body">
+                <p class="project-code">Projeto {{ forloop.counter|stringformat:"02d" }}</p>
+                <h2 class="project-name">{{ projeto.nome }}</h2>
+                {# Ajuste os nomes abaixo para os campos reais do seu model ou annotate da view #}
+                <p class="project-desc">{{ projeto.descricao|default:"" }}</p>
+                <p class="project-stats">{{ projeto.total_historias|default:0 }} histórias &middot; {{ projeto.total_pontos|default:0 }} pontos</p>
+                <p class="project-meta">{{ projeto.total_backlogs|default:0 }} backlogs &middot; Product e sprints</p>
+ 
+                <a href="{% url 'projeto_backlog:projeto_detail' projeto.pk %}" class="project-open">Abrir projeto &rarr;</a>
+                <div class="project-links">
+                    <a href="{% url 'projeto_backlog:projeto_update' projeto.pk %}">Editar</a>
+                    <a href="{% url 'projeto_backlog:projeto_delete' projeto.pk %}" class="danger">Excluir</a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+ 
+    <p class="list-note">Somente projetos vinculados à sua conta aparecem aqui.</p>
+ 
+    <script>
+        (function () {
+            var input = document.getElementById('busca-projetos');
+            var contador = document.getElementById('contador-projetos');
+            var cards = document.querySelectorAll('.project-card');
+ 
+            input.addEventListener('input', function () {
+                var termo = input.value.trim().toLowerCase();
+                var visiveis = 0;
+ 
+                cards.forEach(function (card) {
+                    var combina = card.dataset.nome.indexOf(termo) !== -1;
+                    card.hidden = !combina;
+                    if (combina) visiveis++;
+                });
+ 
+                contador.textContent = visiveis + (visiveis === 1 ? ' projeto' : ' projetos');
+            });
+        })();
+    </script>
+{% else %}
+    <div class="card empty">
+        <h3>Nenhum projeto ainda</h3>
+        <p>Crie o primeiro projeto para começar a organizar backlogs, épicos e histórias de usuário.</p>
+        <a href="{% url 'projeto_backlog:projeto_create' %}" class="btn btn-primary">Criar projeto</a>
+    </div>
+{% endif %}
+{% endblock %}
+ 

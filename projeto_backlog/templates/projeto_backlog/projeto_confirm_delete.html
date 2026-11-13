@@ -1,0 +1,16 @@
+{% extends 'projeto_backlog/base.html' %}
+
+{% block title %}Excluir projeto{% endblock %}
+
+{% block breadcrumb %}<a href="{% url 'projeto_backlog:projeto_list' %}">Projetos</a> <span>/</span> Meus projetos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topbar-crumb a { text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+    {% url 'projeto_backlog:projeto_list' as url_cancelar %}
+    {% include 'projeto_backlog/_modal_exclusao.html' with titulo="Excluir Projeto?" objeto="este projeto" cancelar_url=url_cancelar %}
+{% endblock %}

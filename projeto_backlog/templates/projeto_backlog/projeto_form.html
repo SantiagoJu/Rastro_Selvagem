@@ -1,0 +1,67 @@
+{% extends 'projeto_backlog/base.html' %}
+
+{% block title %}{% if object %}Editar projeto{% else %}Criar projeto{% endif %}{% endblock %}
+
+{% block breadcrumb %}Projetos <span>/</span> {% if object %}Editar projeto{% else %}Criar projeto{% endif %}{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Rastro Selvagem / Projetos</p>
+<h1 class="page-title">{% if object %}Editar projeto{% else %}Criar projeto{% endif %}</h1>
+<p class="page-subtitle">
+    {% if object %}Atualize o nome e acompanhe os backlogs vinculados.{% else %}Um novo projeto começa com um product backlog.{% endif %}
+</p>
+
+<div class="split">
+
+    <section class="card">
+        <h2 class="card-title">Informações do projeto</h2>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="field{% if field.errors %} has-error{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <span class="helptext">{{ field.help_text|safe }}</span>
+                    {% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+
+            {% if object %}
+                <h2 class="subsection-title">Backlogs vinculados</h2>
+                <ul class="backlog-list">
+                    {# 'backlogs' vem do contexto da view: cada item com nome e resumo #}
+                    {% for backlog in backlogs %}
+                        <li>{{ backlog.nome }} &middot; {{ backlog.resumo }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% if object %}Salvar alterações{% else %}Criar projeto{% endif %}
+                </button>
+                <a href="{% url 'projeto_backlog:projeto_list' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
+
+    <aside class="side-card">
+        <h2>Uma base para planejar</h2>
+
+        <h3>Product backlog</h3>
+        <p>Criado automaticamente com o projeto. Reúne as histórias ainda não planejadas.</p>
+
+        <h3>Sprint backlogs</h3>
+        <p>Crie sprints dentro do projeto e mova histórias conforme o planejamento.</p>
+    </aside>
+
+</div>
+{% endblock %}
