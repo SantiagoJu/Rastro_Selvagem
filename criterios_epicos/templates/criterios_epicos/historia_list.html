@@ -1,0 +1,345 @@
+{% extends 'projeto_backlog/base.html' %}
+{% load l10n %}
+
+{% comment %}
+Contexto esperado da view:
+  projeto       -> o projeto atual
+  historias     -> histórias do backlog selecionado
+  backlog_atual -> backlog selecionado (opcional)
+Campos usados em cada história: nome, epico, moscow, pontos_historia, rice_scored, status.
+O código (RS-024) é montado com o pk da história.
+URLs (app criterios_epicos): historia_create, historia_detail, historia_mover.
+{% endcomment %}
+
+{% block title %}Backlog do projeto{% endblock %}
+
+{% block breadcrumb %}<a href="{% url 'projeto_backlog:projeto_list' %}">Projetos</a> <span>/</span> {{ projeto.nome }}{% endblock %}
+
+{% block nav_backlog %} active{% endblock %}
+{% block nav_projetos %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topbar-crumb a { text-decoration: none; }
+    .topbar-crumb a:hover { text-decoration: underline; }
+
+    .field-label { display: block; margin-bottom: 14px; font-size: 0.95rem; font-weight: 600; color: var(--texto); }
+
+    .select, .text-input {
+        width: 100%;
+        height: 43px;
+        padding: 0 14px;
+        border: 1px solid var(--borda-campo);
+        border-radius: 8px;
+        background-color: transparent;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--texto);
+    }
+    .select {
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: 38px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f000b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        background-size: 12px;
+        cursor: pointer;
+    }
+    .select:focus, .text-input:focus { outline: none; border-color: var(--vinho); box-shadow: 0 0 0 3px rgba(79, 0, 11, 0.12); }
+    .text-input::placeholder { color: var(--texto); opacity: 0.8; }
+
+    .link-action {
+        background: none;
+        border: 0;
+        padding: 0;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--vinho);
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .link-action:hover { text-decoration: underline; }
+    .link-action:focus-visible { outline: 3px solid rgba(79, 0, 11, 0.35); outline-offset: 2px; }
+
+    .backlog-bar { margin-top: 40px; }
+    .backlog-row { display: flex; align-items: center; gap: 40px; }
+    .backlog-row form { width: 340px; flex-shrink: 0; }
+    .backlog-summary { font-size: 0.95rem; font-weight: 600; color: var(--texto-suave); }
+    .backlog-row .link-action { margin-left: auto; width: 208px; }
+
+    .filters {
+        margin-top: 36px;
+        display: grid;
+        grid-template-columns: 1.28fr 1fr 1fr 1fr;
+        gap: 16px;
+    }
+
+    .sort-row { margin-top: 28px; display: flex; align-items: center; justify-content: space-between; }
+    .sort-row .link-action:last-child { width: 208px; text-align: left; }
+
+    .story-wrap {
+        margin-top: 28px;
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        overflow-x: auto;
+    }
+    .story-table { min-width: 920px; }
+    .story-table th {
+        padding: 16px;
+        background: var(--verde-claro);
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--vinho);
+    }
+    .story-table td { padding: 12px 16px; border-bottom: 1px solid var(--borda); font-size: 0.9rem; }
+    .story-table tbody tr { background: transparent; }
+    .story-table tbody tr:last-child td { border-bottom: 0; }
+    .story-table tbody tr:hover { background: rgba(233, 237, 225, 0.5); }
+    .story-table tr[hidden] { display: none; }
+    .story-table .center { text-align: center; }
+
+    .story-cell { display: flex; align-items: center; gap: 24px; }
+    .story-code { min-width: 56px; font-size: 0.85rem; color: var(--texto-suave); }
+    .story-title { font-weight: 600; color: var(--texto); text-decoration: none; }
+    .story-title:hover { text-decoration: underline; color: var(--vinho); }
+
+    .chip { display: block; padding: 9px 12px; border-radius: 4px; font-size: 0.85rem; }
+    .chip-epico { background: var(--verde-botao); color: var(--texto); }
+    .chip-moscow { width: 82px; background: var(--pessego); color: var(--vinho); }
+    .moscow-m { background: var(--rosa-ajuda); }
+    .moscow-w { background: #e7e2dc; color: var(--texto); }
+
+    .story-action { font-size: 0.85rem; font-weight: 500; color: var(--vinho); text-decoration: none; }
+    .story-action:hover { text-decoration: underline; }
+
+    .table-note { margin-top: 16px; font-size: 0.85rem; color: var(--texto-suave); }
+
+    @media (max-width: 960px) {
+        .backlog-row { flex-direction: column; align-items: stretch; gap: 14px; }
+        .backlog-row form { width: 100%; }
+        .backlog-row .link-action { margin-left: 0; width: auto; text-align: left; }
+        .filters { grid-template-columns: 1fr; }
+        .sort-row .link-action:last-child { width: auto; }
+        .page-header .btn { margin-top: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Rastro Selvagem / {{ projeto.nome }}</p>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Backlog do projeto</h1>
+        <p class="page-subtitle">Priorize histórias e planeje as próximas entregas.</p>
+    </div>
+    <a href="{% url 'criterios_epicos:historia_create' %}" class="btn btn-primary">Criar história</a>
+</div>
+
+<div class="backlog-bar">
+    <label class="field-label" for="seletor-backlog">Backlog</label>
+    <div class="backlog-row">
+        <form method="get">
+            <select name="backlog" id="seletor-backlog" class="select" onchange="this.form.submit()">
+                {% for b in projeto.backlogs.all %}
+                    <option value="{{ b.pk }}"{% if backlog_atual and b.pk == backlog_atual.pk %} selected{% endif %}>{{ b.nome }}</option>
+                {% endfor %}
+            </select>
+            <noscript><button type="submit" class="btn btn-secondary btn-sm" style="margin-top: 8px;">Trocar backlog</button></noscript>
+        </form>
+
+        <p class="backlog-summary" id="resumo-backlog">{{ historias|length }} histórias</p>
+
+        {# Troque o href pela URL do quadro Kanban #}
+        <a href="#" class="link-action">Ver Kanban &rarr;</a>
+    </div>
+</div>
+
+<div class="filters">
+    <div>
+        <label class="field-label" for="filtro-busca">Buscar histórias</label>
+        <input type="search" id="filtro-busca" class="text-input" placeholder="Buscar título ou código" autocomplete="off">
+    </div>
+    <div>
+        <label class="field-label" for="filtro-epico">Épico</label>
+        <select id="filtro-epico" class="select"><option value="">Todos os épicos</option></select>
+    </div>
+    <div>
+        <label class="field-label" for="filtro-moscow">MoSCoW</label>
+        <select id="filtro-moscow" class="select"><option value="">Todas as prioridades</option></select>
+    </div>
+    <div>
+        <label class="field-label" for="filtro-status">Status</label>
+        <select id="filtro-status" class="select"><option value="">Todos os status</option></select>
+    </div>
+</div>
+
+<div class="sort-row">
+    <button type="button" class="link-action" id="btn-ordem">Ordenar: maior score RICE &darr;</button>
+    <button type="button" class="link-action" id="btn-limpar">Limpar filtros</button>
+</div>
+
+<div class="story-wrap">
+    <table class="story-table">
+        <thead>
+            <tr>
+                <th>História</th>
+                <th style="width: 200px;">Épico</th>
+                <th style="width: 130px;">MoSCoW</th>
+                <th class="center" style="width: 60px;">Pts</th>
+                <th class="center" style="width: 90px;">RICE <span id="seta-rice">&darr;</span></th>
+                <th style="width: 150px;">Status</th>
+                <th style="width: 90px;">Ações</th>
+            </tr>
+        </thead>
+        <tbody id="historias-body">
+            {% for h in historias %}
+            <tr data-historia
+                data-titulo="{{ h.nome|lower }}"
+                data-codigo="rs-{{ h.pk|stringformat:'03d' }}"
+                data-epico="{{ h.epico.nome|default:'Sem épico' }}"
+                data-moscow="{{ h.get_moscow_display|cut:' have' }}"
+                data-status="{{ h.get_status_display }}"
+                data-pontos="{{ h.pontos_historia|unlocalize }}"
+                data-rice="{{ h.rice_scored|unlocalize }}">
+                <td>
+                    <div class="story-cell">
+                        <span class="story-code">RS-{{ h.pk|stringformat:"03d" }}</span>
+                        <a href="{% url 'criterios_epicos:historia_detail' h.pk %}" class="story-title">{{ h.nome }}</a>
+                    </div>
+                </td>
+                <td><span class="chip chip-epico">{{ h.epico.nome|default:"Sem épico" }}</span></td>
+                <td><span class="chip chip-moscow moscow-{{ h.moscow|lower }}">{{ h.get_moscow_display|cut:" have" }}</span></td>
+                <td class="center">{{ h.pontos_historia }}</td>
+                <td class="center">{{ h.rice_scored|floatformat:"-1" }}</td>
+                <td>{{ h.get_status_display }}</td>
+                <td><a href="{% url 'criterios_epicos:historia_mover' h.pk %}" class="story-action">Mover</a></td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="empty-row">Nenhuma história neste backlog ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<p class="table-note" id="rodape-lista" aria-live="polite">Selecione um título para abrir os detalhes.</p>
+
+<script>
+    (function () {
+        var tbody = document.getElementById('historias-body');
+        var linhas = Array.prototype.slice.call(tbody.querySelectorAll('tr[data-historia]'));
+
+        var busca = document.getElementById('filtro-busca');
+        var fEpico = document.getElementById('filtro-epico');
+        var fMoscow = document.getElementById('filtro-moscow');
+        var fStatus = document.getElementById('filtro-status');
+        var btnOrdem = document.getElementById('btn-ordem');
+        var btnLimpar = document.getElementById('btn-limpar');
+        var seta = document.getElementById('seta-rice');
+        var resumo = document.getElementById('resumo-backlog');
+        var rodape = document.getElementById('rodape-lista');
+
+        var maiorPrimeiro = true;
+        var ordemMoscow = ['must', 'should', 'could', "won't", 'wont'];
+
+        function preencher(select, atributo, comparador) {
+            var vistos = [];
+            linhas.forEach(function (l) {
+                var v = l.dataset[atributo];
+                if (v && vistos.indexOf(v) === -1) vistos.push(v);
+            });
+            if (comparador) vistos.sort(comparador);
+            vistos.forEach(function (v) {
+                var o = document.createElement('option');
+                o.value = v;
+                o.textContent = v;
+                select.appendChild(o);
+            });
+        }
+
+        function posicaoMoscow(v) {
+            var i = ordemMoscow.indexOf(v.toLowerCase());
+            return i === -1 ? 99 : i;
+        }
+
+        function montarResumo() {
+            var pontos = 0, concluidas = 0;
+            linhas.forEach(function (l) {
+                pontos += parseFloat(l.dataset.pontos) || 0;
+                if ((l.dataset.status || '').toLowerCase().indexOf('conclu') === 0) concluidas++;
+            });
+            var n = linhas.length;
+            resumo.textContent =
+                n + (n === 1 ? ' história' : ' histórias') + ' · ' +
+                pontos + (pontos === 1 ? ' ponto' : ' pontos') + ' · ' +
+                concluidas + (concluidas === 1 ? ' concluída' : ' concluídas');
+        }
+
+        function aplicarFiltros() {
+            var termo = busca.value.trim().toLowerCase();
+            var visiveis = 0;
+
+            linhas.forEach(function (l) {
+                var ok =
+                    (!termo || l.dataset.titulo.indexOf(termo) !== -1 || l.dataset.codigo.indexOf(termo) !== -1) &&
+                    (!fEpico.value || l.dataset.epico === fEpico.value) &&
+                    (!fMoscow.value || l.dataset.moscow === fMoscow.value) &&
+                    (!fStatus.value || l.dataset.status === fStatus.value);
+                l.hidden = !ok;
+                if (ok) visiveis++;
+            });
+
+            var total = linhas.length;
+            var texto = visiveis > 0
+                ? '1–' + visiveis + ' de ' + total + (total === 1 ? ' história' : ' histórias')
+                : 'Nenhuma história encontrada';
+            rodape.textContent = texto + ' · Selecione um título para abrir os detalhes.';
+        }
+
+        function ordenar() {
+            linhas.sort(function (a, b) {
+                var d = (parseFloat(a.dataset.rice) || 0) - (parseFloat(b.dataset.rice) || 0);
+                return maiorPrimeiro ? -d : d;
+            });
+            linhas.forEach(function (l) { tbody.appendChild(l); });
+            btnOrdem.innerHTML = 'Ordenar: ' + (maiorPrimeiro ? 'maior' : 'menor') + ' score RICE ' + (maiorPrimeiro ? '&darr;' : '&uarr;');
+            seta.innerHTML = maiorPrimeiro ? '&darr;' : '&uarr;';
+        }
+
+        preencher(fEpico, 'epico');
+        preencher(fMoscow, 'moscow', function (a, b) { return posicaoMoscow(a) - posicaoMoscow(b); });
+        preencher(fStatus, 'status');
+
+        [busca, fEpico, fMoscow, fStatus].forEach(function (el) {
+            el.addEventListener('input', aplicarFiltros);
+            el.addEventListener('change', aplicarFiltros);
+        });
+
+        btnOrdem.addEventListener('click', function () {
+            maiorPrimeiro = !maiorPrimeiro;
+            ordenar();
+        });
+
+        btnLimpar.addEventListener('click', function () {
+            busca.value = '';
+            fEpico.value = '';
+            fMoscow.value = '';
+            fStatus.value = '';
+            maiorPrimeiro = true;
+            ordenar();
+            aplicarFiltros();
+        });
+
+        montarResumo();
+        ordenar();
+        aplicarFiltros();
+    })();
+</script>
+{% endblock %}

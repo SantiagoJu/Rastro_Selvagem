@@ -1,0 +1,36 @@
+{% comment %}
+Janela de confirmação de exclusão, usada pelos *_confirm_delete.html dos dois apps.
+Parâmetros do include:
+  titulo       -> ex.: "Excluir Épico?"
+  objeto       -> ex.: "este épico" (entra na frase "deseja excluir ...?")
+  cancelar_url -> para onde o botão Cancelar volta
+Contexto opcional:
+  erro         -> mensagem exibida quando a view não consegue excluir (ex.: itens vinculados)
+{% endcomment %}
+<div class="modal-overlay">
+    <div class="modal-dialog" role="alertdialog" aria-modal="true" aria-labelledby="modal-titulo" aria-describedby="modal-texto">
+        <h2 class="modal-title" id="modal-titulo">{{ titulo }}</h2>
+        <p class="modal-text" id="modal-texto">Esta ação é irreversível. Tem certeza de que deseja excluir {{ objeto }}?</p>
+
+        {% if erro %}
+            <p class="modal-error" role="alert">{{ erro }}</p>
+        {% endif %}
+
+        <form method="post" class="modal-actions">
+            {% csrf_token %}
+            <a href="{{ cancelar_url }}" class="btn btn-secondary" id="modal-cancelar">Cancelar</a>
+            <button type="submit" class="btn btn-perigo">Excluir</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var cancelar = document.getElementById('modal-cancelar');
+        if (!cancelar) return;
+        cancelar.focus();
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') window.location.href = cancelar.href;
+        });
+    })();
+</script>

@@ -1,0 +1,207 @@
+{% extends 'projeto_backlog/base.html' %}
+{% load l10n %}
+
+{% comment %}
+Contexto esperado da view:
+  historia -> a história (DetailView com context_object_name = "historia")
+
+Campos usados: nome, papel, acao, beneficio (opcional), backlog, epico, status, pontos_historia,
+moscow, rice_reach, rice_impact, rice_confidence, rice_effort, rice_scored, solicitante, data_criacao.
+Critérios: historia.Criterios.all, cada um com contexto, evento, resultado.
+O código (RS-024) é montado com o pk da história.
+
+URLs usadas: historia_update, historia_status (opcional), historia_mover (opcional).
+Se historia_status ou historia_mover não existirem, a tela se adapta sem erro.
+{% endcomment %}
+
+{% block title %}RS-{{ historia.pk|stringformat:"03d" }} - Detalhe da história{% endblock %}
+
+{% block breadcrumb %}<a href="{% url 'projeto_backlog:projeto_list' %}">Projetos</a> <span>/</span> {{ historia.backlog.projeto.nome }}{% endblock %}
+
+{% block nav_geral %} active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topbar-crumb a { text-decoration: none; }
+    .topbar-crumb a:hover { text-decoration: underline; }
+
+    .story-code { font-size: 0.85rem; color: var(--vinho); text-transform: uppercase; }
+    .story-heading { margin-top: 16px; font-size: 1.8rem; font-weight: 700; line-height: 1.25; color: var(--vinho); }
+    .story-text { margin-top: 44px; font-size: 1.05rem; line-height: 1.7; color: var(--texto); }
+
+    .criteria-title { margin-top: 48px; font-size: 1.3rem; font-weight: 700; color: var(--vinho); }
+    .criteria-sub { margin-top: 10px; font-size: 0.85rem; color: var(--texto-suave); }
+
+    .criterio-card {
+        margin-top: 16px;
+        padding: 20px 16px;
+        display: grid;
+        grid-template-columns: 52px 1fr;
+        gap: 16px;
+        border-radius: 10px;
+        background: var(--verde-claro);
+    }
+    .criterio-card:first-of-type { margin-top: 24px; }
+    .criterio-num { font-size: 0.95rem; font-weight: 700; color: var(--vinho); }
+    .criterio-text { font-size: 1.05rem; line-height: 1.6; color: var(--texto); }
+    .criterio-empty { margin-top: 24px; padding: 24px; text-align: center; border-radius: 10px; background: var(--verde-claro); color: var(--texto-suave); }
+
+    .criteria-actions { margin-top: 36px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .criteria-actions .btn { width: 256px; }
+    .criteria-actions .link-center { flex: 1; text-align: center; font-size: 0.95rem; font-weight: 700; color: var(--vinho); text-decoration: none; }
+    .criteria-actions .link-center:hover { text-decoration: underline; }
+
+    /* Lateral */
+    .story-side { padding: 24px; }
+    .side-title { font-size: 1rem; font-weight: 700; color: var(--texto); margin-bottom: 14px; }
+    .side-group { margin-top: 32px; }
+    .side-group:first-child { margin-top: 0; }
+    .side-tag { font-size: 0.8rem; text-transform: uppercase; color: var(--texto-suave); }
+    .side-value { margin-top: 12px; font-size: 1rem; font-weight: 700; color: var(--vinho); }
+    .side-value.neutral { color: var(--texto); }
+
+    .side-score { margin-top: 16px; font-size: 3.2rem; font-weight: 700; line-height: 1; color: var(--vinho); }
+    .side-breakdown { margin-top: 24px; font-size: 0.85rem; line-height: 1.6; color: var(--texto-suave); }
+
+    .side-move { display: flex; width: 100%; margin-top: 40px; }
+    .side-meta { margin-top: 32px; font-size: 0.85rem; line-height: 1.7; color: var(--texto-suave); }
+
+    @media (max-width: 960px) {
+        .criteria-actions .btn { width: 100%; }
+        .criteria-actions .link-center { text-align: left; }
+        .page-header .btn { margin-top: 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Rastro Selvagem / {{ historia.backlog.projeto.nome }}</p>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Detalhe da história</h1>
+        <p class="page-subtitle">RS-{{ historia.pk|stringformat:"03d" }} &middot; {{ historia.backlog.projeto.nome }} / {{ historia.backlog.nome }}</p>
+    </div>
+    <a href="{% url 'criterios_epicos:historia_update' historia.pk %}" class="btn btn-primary">Editar história</a>
+</div>
+
+<div class="split">
+
+    <section class="card">
+        <p class="story-code">RS-{{ historia.pk|stringformat:"03d" }}</p>
+        <h2 class="story-heading">{{ historia.nome }}</h2>
+
+        <p class="story-text">
+            Como {{ historia.papel }},<br>
+            eu quero {{ historia.acao }}{% if historia.beneficio %},<br>
+            para {{ historia.beneficio }}{% endif %}.
+        </p>
+
+        <h3 class="criteria-title">Critérios de aceitação</h3>
+        <p class="criteria-sub">{{ historia.Criterios.count }} critério{{ historia.Criterios.count|pluralize }} &middot; Cenários que definem a entrega</p>
+
+        {% for criterio in historia.Criterios.all %}
+            <div class="criterio-card">
+                <span class="criterio-num">{{ forloop.counter|stringformat:"02d" }}</span>
+                <p class="criterio-text">
+                    Dado {{ criterio.contexto }}<br>
+                    Quando {{ criterio.evento }}<br>
+                    Então {{ criterio.resultado }}
+                </p>
+            </div>
+        {% empty %}
+            <p class="criterio-empty">Nenhum critério de aceitação cadastrado ainda.</p>
+        {% endfor %}
+
+        <div class="criteria-actions">
+            {# Os critérios são editados no formulário da história #}
+            <a href="{% url 'criterios_epicos:historia_update' historia.pk %}#criterios" class="btn btn-secondary">Adicionar critério</a>
+            <a href="{% url 'criterios_epicos:historia_update' historia.pk %}#criterios" class="link-center">Editar critérios</a>
+        </div>
+    </section>
+
+    <aside class="side-card story-side">
+
+        <div class="side-group">
+            <p class="side-title">Status</p>
+            {% url 'criterios_epicos:historia_status' historia.pk as url_status %}
+            {% if url_status %}
+                <form method="post" action="{{ url_status }}">
+                    {% csrf_token %}
+                    <select name="status" class="select text-select" aria-label="Status da história" onchange="this.form.submit()">
+                        {% for valor, rotulo in historia.Status.choices %}
+                            <option value="{{ valor }}"{% if valor == historia.status %} selected{% endif %}>{{ rotulo }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            {% else %}
+                <div class="readonly-box" style="background: transparent;">{{ historia.get_status_display }}</div>
+            {% endif %}
+        </div>
+
+        <div class="side-group">
+            <p class="side-tag">Épico</p>
+            <p class="side-value">{{ historia.epico.nome|default:"Sem épico" }}</p>
+        </div>
+
+        <div class="side-group" style="margin-top: 28px;">
+            <p class="side-tag">Backlog</p>
+            <p class="side-value neutral">{{ historia.backlog.nome }}</p>
+        </div>
+
+        <p class="side-value" style="margin-top: 36px;">
+            {{ historia.pontos_historia }} ponto{{ historia.pontos_historia|pluralize }} de história &middot; {{ historia.get_moscow_display|cut:" have" }}
+        </p>
+
+        <div class="side-group" style="margin-top: 40px;">
+            <p class="side-tag">Score RICE</p>
+            <p class="side-score">{{ historia.rice_scored|floatformat:"-1" }}</p>
+
+            <p class="side-breakdown" id="rice-calculo"
+               data-reach="{{ historia.rice_reach|unlocalize }}"
+               data-impact="{{ historia.rice_impact|unlocalize }}"
+               data-confidence="{{ historia.rice_confidence|unlocalize }}"
+               data-effort="{{ historia.rice_effort|unlocalize }}">
+                Reach {{ historia.rice_reach }} &middot; Impact {{ historia.get_rice_impact_display }}<br>
+                Confidence {{ historia.rice_confidence }}% &middot; Effort {{ historia.rice_effort }} pessoa-mês<br>
+                <span id="rice-formula"></span>
+            </p>
+        </div>
+
+        {% url 'criterios_epicos:historia_mover' historia.pk as url_mover %}
+        {% if url_mover %}
+            <a href="{{ url_mover }}" class="btn btn-secondary side-move">Mover para outro backlog</a>
+        {% endif %}
+
+        <p class="side-meta">
+            Projeto: {{ historia.backlog.projeto.nome }}<br>
+            {% if historia.solicitante %}Criada por {{ historia.solicitante.get_full_name|default:historia.solicitante.username }}{% endif %}{% if historia.data_criacao %} em {{ historia.data_criacao|date:"j b. Y" }}{% endif %}
+        </p>
+    </aside>
+
+</div>
+
+<script>
+    (function () {
+        var bloco = document.getElementById('rice-calculo');
+        var saida = document.getElementById('rice-formula');
+        if (!bloco || !saida) return;
+
+        var reach = parseFloat(bloco.dataset.reach);
+        var impact = parseFloat(bloco.dataset.impact);
+        var conf = parseFloat(bloco.dataset.confidence);
+        var effort = parseFloat(bloco.dataset.effort);
+        if (conf > 1) conf = conf / 100;
+        if ([reach, impact, conf, effort].some(isNaN) || effort <= 0) return;
+
+        function fmt(n, min, max) {
+            return n.toLocaleString('pt-BR', { minimumFractionDigits: min, maximumFractionDigits: max });
+        }
+
+        var score = (reach * impact * conf) / effort;
+        saida.textContent =
+            '(' + fmt(reach, 0, 2) + ' \u00d7 ' + fmt(impact, 0, 2) + ' \u00d7 ' + fmt(conf, 2, 2) + ') \u00f7 ' +
+            fmt(effort, 0, 2) + ' = ' + fmt(score, 0, 1);
+    })();
+</script>
+{% endblock %}

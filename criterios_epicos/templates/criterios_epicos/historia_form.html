@@ -1,0 +1,324 @@
+{% extends 'projeto_backlog/base.html' %}
+ 
+{% comment %}
+Contexto esperado da view:
+  form     -> ModelForm de HistoriaUsuario
+  formset  -> formset inline de CriterioAceitacao (use can_delete=True para permitir remover critérios salvos)
+  projeto  -> projeto atual (na criação; na edição usa object.backlog.projeto)
+  object   -> a história (só na edição)
+ 
+Campos do model usados: nome, papel, acao, backlog, epico, pontos_historia, moscow,
+rice_reach, rice_impact, rice_confidence, rice_effort.
+O campo "Para [benefício]" só aparece se o model tiver um campo beneficio.
+Campos de cada critério: contexto, evento, resultado.
+{% endcomment %}
+ 
+{% block title %}{% if object %}Editar história{% else %}Nova história{% endif %}{% endblock %}
+ 
+{% block breadcrumb %}<a href="{% url 'projeto_backlog:projeto_list' %}">Projetos</a> <span>/</span> {% firstof projeto.nome object.backlog.projeto.nome "Projeto" %}{% endblock %}
+ 
+{% block nav_geral %} active{% endblock %}
+ 
+{% block extra_css %}
+<style>
+    .topbar-crumb a { text-decoration: none; }
+    .topbar-crumb a:hover { text-decoration: underline; }
+ 
+    .story-form .split { align-items: stretch; }
+    .story-form .field { margin-top: 20px; }
+    .story-form .card-title { margin-bottom: 4px; }
+    .story-form .block { margin-top: 24px; }
+    .story-form .hint { display: block; margin-top: 10px; font-size: 0.8rem; color: var(--texto-suave); }
+ 
+    .context-card .field:first-of-type { margin-top: 20px; }
+    .context-note { margin-top: 36px; font-size: 0.95rem; font-weight: 700; color: var(--vinho); }
+    .context-required { margin-top: 24px; font-size: 0.8rem; color: var(--texto-suave); }
+ 
+    /* Estimativa */
+    .estimate { display: grid; grid-template-columns: 1fr 360px; gap: 32px; align-items: start; }
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .rice-inputs { display: grid; grid-template-columns: 1fr 1.3fr 1fr 1fr; gap: 16px; }
+    .rice-legend { margin-top: 24px; font-size: 0.8rem; color: var(--texto-suave); }
+ 
+    .stepper { position: relative; }
+    .stepper input { padding-right: 70px; -moz-appearance: textfield; appearance: textfield; }
+    .stepper input::-webkit-outer-spin-button,
+    .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .stepper-btns { position: absolute; top: 0; right: 8px; height: 43px; display: flex; align-items: center; gap: 4px; }
+    .stepper-btns button {
+        width: 24px; height: 28px; border: 0; background: none;
+        font-size: 1.1rem; font-weight: 700; color: var(--vinho); cursor: pointer; border-radius: 4px;
+    }
+    .stepper-btns button:hover { background: rgba(79, 0, 11, 0.08); }
+ 
+    .rice-panel { margin-top: 0; padding: 24px; border-radius: 10px; background: var(--verde-claro); }
+    .rice-panel .tag { font-size: 0.8rem; text-transform: uppercase; color: var(--texto-suave); }
+    .rice-panel .score { margin-top: 20px; font-size: 3rem; font-weight: 700; line-height: 1; color: var(--vinho); }
+    .rice-panel .formula { margin-top: 24px; font-size: 0.95rem; font-weight: 600; color: var(--texto); }
+    .rice-panel .calc { margin-top: 36px; font-size: 0.85rem; line-height: 1.6; color: var(--texto-suave); }
+ 
+    /* Critérios */
+    .criterio-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .criterio-actions { margin-top: 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .criterio-actions .btn { width: 254px; }
+    .criterio-row[hidden] { display: none; }
+ 
+    .link-action {
+        background: none; border: 0; padding: 0;
+        font: inherit; font-size: 0.95rem; font-weight: 700;
+        color: var(--vinho); cursor: pointer;
+    }
+    .link-action:hover { text-decoration: underline; }
+    .link-action[hidden] { display: none; }
+ 
+    .story-form .form-actions { margin-top: 24px; }
+ 
+    @media (max-width: 960px) {
+        .estimate, .pair, .rice-inputs, .criterio-row { grid-template-columns: 1fr; }
+        .criterio-actions .btn { width: 100%; }
+    }
+</style>
+{% endblock %}
+ 
+{% block content %}
+<p class="eyebrow">Rastro Selvagem / {% firstof projeto.nome object.backlog.projeto.nome "Projeto" %}</p>
+<h1 class="page-title">{% if object %}Editar história{% else %}Nova história{% endif %}</h1>
+<p class="page-subtitle">
+    {% if object %}Atualize a necessidade, a priorização e os critérios de aceitação.{% else %}Descreva a necessidade e priorize com MoSCoW e RICE.{% endif %}
+</p>
+ 
+<form method="post" novalidate class="story-form">
+    {% csrf_token %}
+ 
+    {% if form.non_field_errors %}
+        <div class="form-errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+ 
+    <div class="split">
+ 
+        <section class="card">
+            <h2 class="card-title">01 &middot; Necessidade do usuário</h2>
+ 
+            {% include 'criterios_epicos/_campo.html' with campo=form.nome rotulo="Nome" %}
+            {% include 'criterios_epicos/_campo.html' with campo=form.papel rotulo="Como [papel]" %}
+            {% include 'criterios_epicos/_campo.html' with campo=form.acao rotulo="Eu quero [ação]" %}
+            {% if form.beneficio %}{% include 'criterios_epicos/_campo.html' with campo=form.beneficio rotulo="Para [benefício]" %}{% endif %}
+        </section>
+ 
+        <aside class="side-card context-card">
+            <h2>Contexto da história</h2>
+ 
+            <div class="field">
+                <label>Projeto</label>
+                <div class="readonly-box">{% firstof projeto.nome object.backlog.projeto.nome %}</div>
+            </div>
+ 
+            {% include 'criterios_epicos/_campo.html' with campo=form.backlog %}
+            {% include 'criterios_epicos/_campo.html' with campo=form.epico %}
+ 
+            <p class="context-note">
+                {% if object %}Status: {{ object.get_status_display }}{% else %}Status inicial: A fazer{% endif %}
+            </p>
+            <p class="context-required">* Campos obrigatórios</p>
+        </aside>
+ 
+    </div>
+ 
+    <section class="card block">
+        <div class="estimate">
+            <div>
+                <h2 class="card-title">02 &middot; Estimativa e priorização</h2>
+ 
+                <div class="pair">
+                    <div>
+                        {% include 'criterios_epicos/_campo.html' with campo=form.pontos_historia rotulo="Pontos de história" dica="0 · 1 · 2 · 3 · 5 · 8 · 13 · 21 · 34 · 55" %}
+                    </div>
+                    <div>
+                        {% include 'criterios_epicos/_campo.html' with campo=form.moscow rotulo="MoSCoW" dica="Must · Should · Could · Won't" %}
+                    </div>
+                </div>
+ 
+                <div class="rice-inputs">
+                    <div class="field{% if form.rice_reach.errors %} has-error{% endif %}">
+                        <label for="{{ form.rice_reach.id_for_label }}">Reach *</label>
+                        <div class="stepper">
+                            {{ form.rice_reach }}
+                            <span class="stepper-btns">
+                                <button type="button" data-alvo="{{ form.rice_reach.id_for_label }}" data-dir="-1" aria-label="Diminuir Reach">&minus;</button>
+                                <button type="button" data-alvo="{{ form.rice_reach.id_for_label }}" data-dir="1" aria-label="Aumentar Reach">+</button>
+                            </span>
+                        </div>
+                        {{ form.rice_reach.errors }}
+                    </div>
+ 
+                    {% include 'criterios_epicos/_campo.html' with campo=form.rice_impact rotulo="Impact" %}
+                    {% include 'criterios_epicos/_campo.html' with campo=form.rice_confidence rotulo="Confidence" %}
+ 
+                    <div class="field{% if form.rice_effort.errors %} has-error{% endif %}">
+                        <label for="{{ form.rice_effort.id_for_label }}">Effort *</label>
+                        <div class="stepper">
+                            {{ form.rice_effort }}
+                            <span class="stepper-btns">
+                                <button type="button" data-alvo="{{ form.rice_effort.id_for_label }}" data-dir="-1" aria-label="Diminuir Effort">&minus;</button>
+                                <button type="button" data-alvo="{{ form.rice_effort.id_for_label }}" data-dir="1" aria-label="Aumentar Effort">+</button>
+                            </span>
+                        </div>
+                        {{ form.rice_effort.errors }}
+                    </div>
+                </div>
+ 
+                <p class="rice-legend">Impact: Massivo 3 &middot; Alto 2 &middot; Médio 1 &middot; Baixo 0,5 &middot; Mínimo 0,25 &nbsp;|&nbsp; Confidence: 100%, 80%, 50%</p>
+            </div>
+ 
+            <div class="rice-panel" aria-live="polite">
+                <p class="tag">Score RICE &middot; somente leitura</p>
+                <p class="score" id="rice-score">&mdash;</p>
+                <p class="formula">(Reach &times; Impact &times; Confidence) &divide; Effort</p>
+                <p class="calc">
+                    <span id="rice-conta"></span><br>
+                    Effort em pessoa-mês, maior que zero.
+                </p>
+            </div>
+        </div>
+    </section>
+ 
+    <section class="card block" id="criterios">
+        <h2 class="card-title">03 &middot; Critérios de aceitação</h2>
+ 
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}<div class="form-errors">{{ formset.non_form_errors }}</div>{% endif %}
+ 
+        <div id="lista-criterios">
+            {% for f in formset %}
+                {% include 'criterios_epicos/_criterio_linha.html' with f=f n=forloop.counter %}
+            {% endfor %}
+        </div>
+ 
+        <div class="criterio-actions">
+            <button type="button" class="btn btn-secondary" id="btn-adicionar">Adicionar critério</button>
+            <button type="button" class="link-action" id="btn-remover">Remover critério</button>
+        </div>
+    </section>
+ 
+    <template id="criterio-modelo">
+        {% include 'criterios_epicos/_criterio_linha.html' with f=formset.empty_form n="N" %}
+    </template>
+ 
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{% if object %}Salvar alterações{% else %}Salvar história{% endif %}</button>
+        <a href="{% url 'projeto_backlog:projeto_list' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+ 
+<script>
+    (function () {
+        /* Score RICE ao vivo */
+        var campos = {
+            reach: document.getElementById('{{ form.rice_reach.id_for_label }}'),
+            impact: document.getElementById('{{ form.rice_impact.id_for_label }}'),
+            confidence: document.getElementById('{{ form.rice_confidence.id_for_label }}'),
+            effort: document.getElementById('{{ form.rice_effort.id_for_label }}')
+        };
+        var saidaScore = document.getElementById('rice-score');
+        var saidaConta = document.getElementById('rice-conta');
+ 
+        function numero(el) {
+            if (!el) return NaN;
+            var v = parseFloat(String(el.value).replace(',', '.'));
+            if (isNaN(v) && el.options && el.selectedIndex >= 0) {
+                var m = el.options[el.selectedIndex].text.match(/(\d+(?:[.,]\d+)?)\s*%?\s*$/);
+                if (m) v = parseFloat(m[1].replace(',', '.'));
+            }
+            return v;
+        }
+ 
+        function fmt(n, min, max) {
+            return n.toLocaleString('pt-BR', { minimumFractionDigits: min, maximumFractionDigits: max });
+        }
+ 
+        function calcular() {
+            var reach = numero(campos.reach);
+            var impact = numero(campos.impact);
+            var conf = numero(campos.confidence);
+            var effort = numero(campos.effort);
+ 
+            if (conf > 1) conf = conf / 100;
+ 
+            if ([reach, impact, conf, effort].some(isNaN) || effort <= 0) {
+                saidaScore.textContent = '\u2014';
+                saidaConta.textContent = 'Preencha os campos para calcular.';
+                return;
+            }
+ 
+            var score = (reach * impact * conf) / effort;
+            saidaScore.textContent = fmt(score, 0, 1);
+            saidaConta.textContent =
+                '(' + fmt(reach, 0, 2) + ' \u00d7 ' + fmt(impact, 0, 2) + ' \u00d7 ' + fmt(conf, 2, 2) + ') \u00f7 ' +
+                fmt(effort, 0, 2) + ' = ' + fmt(score, 0, 1);
+        }
+ 
+        Object.keys(campos).forEach(function (k) {
+            if (!campos[k]) return;
+            campos[k].addEventListener('input', calcular);
+            campos[k].addEventListener('change', calcular);
+        });
+ 
+        document.querySelectorAll('.stepper-btns button').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var alvo = document.getElementById(btn.dataset.alvo);
+                var passo = parseFloat(alvo.step) || 1;
+                var atual = parseFloat(String(alvo.value).replace(',', '.')) || 0;
+                var novo = atual + passo * parseInt(btn.dataset.dir, 10);
+                if (alvo.min !== '' && novo < parseFloat(alvo.min)) novo = parseFloat(alvo.min);
+                alvo.value = novo;
+                alvo.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+ 
+        calcular();
+ 
+        /* Critérios de aceitação dinâmicos */
+        var lista = document.getElementById('lista-criterios');
+        var total = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
+        var modelo = document.getElementById('criterio-modelo');
+        var btnAdicionar = document.getElementById('btn-adicionar');
+        var btnRemover = document.getElementById('btn-remover');
+ 
+        function visiveis() {
+            return Array.prototype.slice.call(lista.querySelectorAll('.criterio-row')).filter(function (l) { return !l.hidden; });
+        }
+ 
+        function renumerar() {
+            var linhas = visiveis();
+            linhas.forEach(function (linha, i) {
+                linha.querySelectorAll('.num').forEach(function (n) { n.textContent = i + 1; });
+            });
+            btnRemover.textContent = 'Remover critério ' + linhas.length;
+            btnRemover.hidden = linhas.length <= 1;
+        }
+ 
+        btnAdicionar.addEventListener('click', function () {
+            var indice = parseInt(total.value, 10);
+            lista.insertAdjacentHTML('beforeend', modelo.innerHTML.replace(/__prefix__/g, indice));
+            total.value = indice + 1;
+            renumerar();
+        });
+ 
+        btnRemover.addEventListener('click', function () {
+            var linhas = visiveis();
+            if (linhas.length <= 1) return;
+            var ultima = linhas[linhas.length - 1];
+            var marcar = ultima.querySelector('input[name$="-DELETE"]');
+            if (marcar) {
+                marcar.checked = true;
+                ultima.hidden = true;
+            } else {
+                ultima.remove();
+            }
+            renumerar();
+        });
+ 
+        renumerar();
+    })();
+</script>
+{% endblock %}

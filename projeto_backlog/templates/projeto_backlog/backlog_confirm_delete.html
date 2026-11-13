@@ -1,0 +1,19 @@
+{% extends 'projeto_backlog/base.html' %}
+
+{% block title %}Excluir backlog{% endblock %}
+
+{% block breadcrumb %}<a href="{% url 'projeto_backlog:projeto_list' %}">Projetos</a> <span>/</span> {{ object.projeto.nome }}{% endblock %}
+
+{% block nav_backlog %} active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topbar-crumb a { text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+    {# Volta para o detalhe do projeto, onde o backlog é listado #}
+    {% url 'projeto_backlog:projeto_detail' object.projeto.pk as url_cancelar %}
+    {% include 'projeto_backlog/_modal_exclusao.html' with titulo="Excluir Backlog?" objeto="este backlog" cancelar_url=url_cancelar %}
+{% endblock %}
