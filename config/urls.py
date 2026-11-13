@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('contas/',include('contas.urls')),
     path('',include('projeto_backlog.urls')),
+    path('criterios/', include('criterios_epicos.urls')),
 ]
