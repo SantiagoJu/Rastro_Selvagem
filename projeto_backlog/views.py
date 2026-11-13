@@ -15,22 +15,22 @@ class ProjetoCreateView(LoginRequiredMixin, CreateView):
     model = Projeto
     template_name = 'projeto_backlog/projeto_form.html'
     fields = ['nome']
-    success_url = reverse_lazy('projeto_list')
+    success_url = reverse_lazy('projeto_backlog:projeto_list')
 
 class ProjetoUpdateView(LoginRequiredMixin, UpdateView):
     model = Projeto
     template_name = 'projeto_backlog/projeto_form.html'
     fields = ['nome']
-    success_url = reverse_lazy('projeto_list')
+    success_url = reverse_lazy('projeto_backlog:projeto_list')
 
 class ProjetoDeleteView(LoginRequiredMixin, DeleteView):
     model= Projeto
     template_name = 'projeto_backlog/projeto_confirm_delete.html'
-    success_url = reverse_lazy('projeto_list')
+    success_url = reverse_lazy('projeto_backlog:projeto_list')
 
 class ProjetoDatailView(LoginRequiredMixin, DetailView):
     model = Projeto
-    template_name = 'projeto_backlog/projeto_datail.html'
+    template_name = 'projeto_backlog/projeto_detail.html'
     context_object_name = 'projeto'
 
 
@@ -45,16 +45,16 @@ class BacklogCreateView(CreateView):
     model = Backlog
     template_name = 'projeto_backlog/backlog_form.html'
     fields = ['nome', 'tipo', 'projeto']
-    success_url = reverse_lazy('backlog_list')
+    success_url = reverse_lazy('projeto_backlog:backlog_list')
 
 class BacklogUpdateView(LoginRequiredMixin, UpdateView):
     model = Backlog
     template_name = 'projeto_backlog/backlog_form.html'
     fields = ['nome', 'tipo', 'projeto']
-    success_url = reverse_lazy('backlog_list')
+    success_url = reverse_lazy('projeto_backlog:backlog_list')
 
 class BacklogDeleteView(LoginRequiredMixin, DeleteView):
     model = Backlog
     template_name = 'projeto_backlog/backlog_confirm_delete.html'
-    success_url = reverse_lazy('backlog_list')
+    success_url = reverse_lazy('projeto_backlog:backlog_list')
               

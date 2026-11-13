@@ -8,29 +8,29 @@ from .models import Epico, CriterioAceitacao, HistoriaUsuario
 
 class EpicoListView(LoginRequiredMixin, ListView):
     model = Epico
-    template_name = 'criterio_epico/epico_list.html'
+    template_name = 'criterios_epicos/epico_list.html'
     context_object_name = 'epicos'
 
 class EpicoCreateView (LoginRequiredMixin, CreateView):
     model = Epico
-    template_name = 'criterio_epico/epico_form.html'
+    template_name = 'criterios_epicos/epico_form.html'
     fields = ['nome', 'descricao', 'projeto']
-    success_url = reverse_lazy('epico_list')
+    success_url = reverse_lazy('criterios_epicos:epico_list')
 
 class EpicoUpdateView(LoginRequiredMixin, UpdateView):
     model = Epico
-    template_name = 'criterio_epico/epico_form.html'
+    template_name = 'criterios_epicos/epico_form.html'
     fields = ['nome', 'descricao', 'projeto']
-    success_url = reverse_lazy('epico_list')
+    success_url = reverse_lazy('criterios_epicos:epico_list')
 
 class EpicoDeleteView(LoginRequiredMixin, DeleteView):
     model = Epico
-    template_name = 'criterio_epico/epico_confirm_delete.html'
-    success_url = reverse_lazy('epico_list')
+    template_name = 'criterios_epicos/epico_confirm_delete.html'
+    success_url = reverse_lazy('criterios_epicos:epico_list')
 
 class EpicoDetailView(LoginRequiredMixin, DetailView):
     model = Epico
-    template_name = 'criterio_epico/epico_detail.html'
+    template_name = 'criterios_epicos/epico_detail.html'
     context_object_name = 'epico'
 
 
@@ -38,29 +38,29 @@ class EpicoDetailView(LoginRequiredMixin, DetailView):
 
 class HistoriaUsuarioListView(LoginRequiredMixin, ListView):
     model = HistoriaUsuario
-    template_name= 'criterio_epico/historia_list.html'
+    template_name= 'criterios_epicos/historia_list.html'
     context_object_name = 'historias'
 
 class HistoriaUsuarioCreateView(LoginRequiredMixin, CreateView):
     model = HistoriaUsuario
-    template_name = 'criterio_epico/historia_form.html'
+    template_name = 'criterios_epicos/historia_form.html'
     fields= ['nome','acao','papel','pontos_historia', 'moscow','rice_reach','rice_impact', 'rice_confidence', 'rice_effort', 'epico', 'backlog','solicitante']
-    success_url = reverse_lazy('historia_list')
+    success_url = reverse_lazy('criterios_epicos:historia_list')
 
 class HistoriaUsuarioUpdateView(LoginRequiredMixin, UpdateView):
     model = HistoriaUsuario
-    template_name = 'criterio_epico/historia_form.html'
+    template_name = 'criterios_epicos/historia_form.html'
     fields = ['nome','acao','papel','pontos_historia', 'moscow','rice_reach','rice_impact', 'rice_confidence', 'rice_effort', 'status', 'epico', 'backlog','solicitante']
-    success_url = reverse_lazy('historia_list')
+    success_url = reverse_lazy('criterios_epicos:historia_list')
 
 class HistoriaUsuarioDeleteView(LoginRequiredMixin, DeleteView):
     model = HistoriaUsuario
-    template_name = 'criterio_epico/historia_confirm_delete.html'
-    success_url = reverse_lazy('historia_list')
+    template_name = 'criterios_epicos/historia_confirm_delete.html'
+    success_url = reverse_lazy('criterios_epicos:historia_list')
 
 class HistoriaUsuarioDetailView(LoginRequiredMixin, DetailView):
     model = HistoriaUsuario
-    template_name = 'criterio_epico/historia_detail.html'
+    template_name = 'criterios_epicos/historia_detail.html'
     context_object_name = 'historia'
 
 
@@ -68,27 +68,27 @@ class HistoriaUsuarioDetailView(LoginRequiredMixin, DetailView):
 
 class CriterioListView(LoginRequiredMixin, ListView):
     model = CriterioAceitacao
-    template_name = 'criterio_epico/criterio_list.html'
+    template_name = 'criterios_epicos/criterio_list.html'
     context_object_name = 'criterios'
 
 class CriterioCreateView(LoginRequiredMixin, CreateView):
     model = CriterioAceitacao
-    template_name = 'criterio_epico/criterio_form.html'
+    template_name = 'criterios_epicos/criterio_form.html'
     fields = ['contexto','evento','resultado','historia_usuario']
-    success_url = reverse_lazy('criterio_list')
+    success_url = reverse_lazy('criterios_epicos:criterio_list')
 
 class CriterioUpdateView(LoginRequiredMixin, UpdateView):
     model = CriterioAceitacao
-    template_name = 'criterio_epico/criterio_form.html'
+    template_name = 'criterios_epicos/criterio_form.html'
     fields = ['contexto','evento','resultado','historia_usuario']
-    success_url = reverse_lazy('criterio_list')
+    success_url = reverse_lazy('criterios_epicos:criterio_list')
 
 class CriterioDeleteView(LoginRequiredMixin, DeleteView):
     model = CriterioAceitacao
-    template_name = 'criterio_epico/criterio_confirm_delete.html'
-    success_url = reverse_lazy('criterio_list')
+    template_name = 'criterios_epicos/criterio_confirm_delete.html'
+    success_url = reverse_lazy('criterios_epicos:criterio_list')
 
 class CriterioDetailView(LoginRequiredMixin, DetailView):
     model = CriterioAceitacao
-    template_name = 'criterio_epico/criterio_detail.html'
+    template_name = 'criterios_epicos/criterio_detail.html'
     context_object_name = 'criterio'
