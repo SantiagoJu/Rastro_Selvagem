@@ -1,0 +1,20 @@
+<div class="criterio-row">
+    {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+    {% if f.DELETE %}<span hidden>{{ f.DELETE }}</span>{% endif %}
+
+    <div class="field{% if f.contexto.errors %} has-error{% endif %}">
+        <label for="{{ f.contexto.id_for_label }}"><span class="num">{{ n }}</span>. Dado (contexto)</label>
+        {{ f.contexto }}
+        {{ f.contexto.errors }}
+    </div>
+    <div class="field{% if f.evento.errors %} has-error{% endif %}">
+        <label for="{{ f.evento.id_for_label }}"><span class="num">{{ n }}</span>. Quando (evento)</label>
+        {{ f.evento }}
+        {{ f.evento.errors }}
+    </div>
+    <div class="field{% if f.resultado.errors %} has-error{% endif %}">
+        <label for="{{ f.resultado.id_for_label }}"><span class="num">{{ n }}</span>. Então (resultado)</label>
+        {{ f.resultado }}
+        {{ f.resultado.errors }}
+    </div>
+</div>

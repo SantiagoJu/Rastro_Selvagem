@@ -1,0 +1,6 @@
+<div class="field{% if campo.errors %} has-error{% endif %}">
+    <label for="{{ campo.id_for_label }}">{{ rotulo|default:campo.label }}{% if campo.field.required %} *{% endif %}</label>
+    {{ campo }}
+    {% if dica %}<span class="hint">{{ dica }}</span>{% endif %}
+    {{ campo.errors }}
+</div>
