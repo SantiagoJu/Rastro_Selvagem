@@ -1,158 +1,294 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro - Rastro Selvagem</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Criar conta · Rastro Selvagem</title>
+
+    {# Questrial é a alternativa livre à Century Gothic, usada quando ela não está instalada #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet">
+
     <style>
-        /* Reset básico */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --bordo: #4F000B;
+            --creme: #F9DEC9;
+            --fundo-form: #FDF8F1;
+            --texto: #4A4647;
+            --cinza: #6D696A;
+            --erro: #C0392B;
         }
 
-        /* Fundo da página com tema de natureza leve */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Century Gothic', 'Questrial', 'Segoe UI', sans-serif;
+            color: var(--texto);
+            background: var(--fundo-form);
             min-height: 100vh;
-            color: #333;
         }
 
-        /* O "Card" branco onde o formulário fica */
-        .login-container {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 450px;
+        .login {
+            display: grid;
+            grid-template-columns: 43fr 57fr;
+            min-height: 100vh;
         }
 
-        /* Cabeçalhos */
-        .login-container h1 {
-            color: #2c5e3b; /* Verde floresta */
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 1.8rem;
-        }
-
-        .login-container p.subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 0.95rem;
-        }
-
-        /* Estilizando o formulário gerado pelo Django (form.as_p) */
-        form p {
-            margin-bottom: 15px;
+        /* ---------- Painel da marca (esquerda) ---------- */
+        .marca {
+            background: var(--bordo);
+            color: var(--creme);
+            padding: 72px 70px 56px;
             display: flex;
             flex-direction: column;
+            border-radius: 0 8px 8px 0;
         }
 
-        form label {
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #444;
+        .marca__logo {
+            background: var(--creme);
+            color: var(--bordo);
+            border-radius: 12px;
+            padding: 52px 40px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            max-width: 500px;
         }
 
-        /* Estilizando os inputs e selects padrão */
-        form input[type="text"],
-        form input[type="password"],
-        form input[type="email"],
-        form select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+        .marca__logo svg { width: 52px; height: 52px; flex-shrink: 0; }
+
+        .marca__logo span {
+            font-size: 1.9rem;
+            font-weight: 700;
+            line-height: 1.15;
         }
 
-        form input:focus,
-        form select:focus {
-            outline: none;
-            border-color: #2c5e3b;
-            box-shadow: 0 0 0 3px rgba(44, 94, 59, 0.1);
+        .marca__chamada { margin-top: auto; }
+
+        .marca__chamada h2 {
+            font-size: 2.6rem;
+            line-height: 1.2;
+            font-weight: 700;
+            max-width: 480px;
         }
 
-        /* Oculta os textos de ajuda verbosos do Django para manter o visual limpo */
-        form span.helptext {
-            font-size: 0.8rem;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        /* Estilizando listas de erros do formulário */
-        ul.errorlist {
-            color: #d32f2f;
-            list-style-type: none;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            padding: 0;
-        }
-
-        /* Botão de submit */
-        button[type="submit"] {
-            width: 100%;
-            background-color: #2c5e3b;
-            color: white;
-            padding: 14px;
-            border: none;
-            border-radius: 6px;
+        .marca__chamada p {
+            margin-top: 48px;
             font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background-color 0.3s ease;
+            line-height: 1.55;
+            max-width: 500px;
         }
 
-        button[type="submit"]:hover {
-            background-color: #1f4229;
+        .marca__linha {
+            width: 80px;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--creme);
+            margin-top: 64px;
         }
 
-        /* Link de voltar */
-        .footer-link {
-            text-align: center;
-            margin-top: 25px;
+        .marca__rodape {
+            margin-top: auto;
+            padding-top: 120px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* ---------- Formulário (direita) ---------- */
+        .acesso {
+            display: flex;
+            align-items: center;
+            padding: 48px 8vw;
+        }
+
+        .acesso__conteudo { width: 100%; max-width: 622px; }
+
+        .acesso h1 {
+            font-size: 2.9rem;
+            font-weight: 700;
+            color: var(--bordo);
+            line-height: 1.15;
+        }
+
+        .acesso__sub {
+            margin-top: 28px;
+            font-size: 1.1rem;
+            color: var(--texto);
+        }
+
+        form { margin-top: 48px; }
+
+        .campo { margin-bottom: 28px; }
+
+        .campo label {
+            display: block;
             font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 14px;
         }
 
-        .footer-link a {
-            color: #2c5e3b;
+        .campo input,
+        .campo select {
+            width: 100%;
+            height: 48px;
+            padding: 0 14px;
+            font: inherit;
+            font-size: 1rem;
+            color: var(--texto);
+            background: #fff;
+            border: 1px solid var(--cinza);
+            border-radius: 8px;
+        }
+
+        .campo input:focus-visible,
+        .campo select:focus-visible {
+            outline: 3px solid var(--creme);
+            border-color: var(--bordo);
+        }
+
+        .campo--erro input,
+        .campo--erro select { border-color: var(--erro); }
+
+        .campo__ajuda {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--texto);
+        }
+
+        .campo__ajuda ul { list-style: none; }
+
+        .campo__erro,
+        .erro-geral {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: var(--erro);
+        }
+
+        .erro-geral {
+            margin: 0 0 24px;
+            padding: 12px 14px;
+            border: 1px solid var(--erro);
+            border-radius: 8px;
+            background: #fdecea;
+        }
+
+        .link {
+            color: var(--bordo);
+            font-weight: 700;
+            font-size: 0.95rem;
             text-decoration: none;
-            font-weight: bold;
         }
 
-        .footer-link a:hover {
-            text-decoration: underline;
+        .link:hover,
+        .link:focus-visible { text-decoration: underline; }
+
+        .botao {
+            display: block;
+            width: 100%;
+            height: 48px;
+            margin-top: 36px;
+            font: inherit;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--creme);
+            background: var(--bordo);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .botao:hover { background: #3a0008; }
+        .botao:focus-visible { outline: 3px solid var(--creme); outline-offset: 2px; box-shadow: 0 0 0 5px var(--bordo); }
+
+        .entrar { margin-top: 36px; }
+
+        .aviso {
+            margin-top: 28px;
+            font-size: 0.85rem;
+            color: var(--texto);
+        }
+
+        /* ---------- Telas menores ---------- */
+        @media (max-width: 900px) {
+            .login { grid-template-columns: 1fr; }
+            .marca { border-radius: 0; padding: 32px 24px; }
+            .marca__logo { padding: 24px; }
+            .marca__chamada,
+            .marca__linha,
+            .marca__rodape { display: none; }
+            .acesso { padding: 36px 24px; }
+            .acesso h1 { font-size: 2.2rem; }
         }
     </style>
 </head>
 <body>
+    <main class="login">
 
-    <div class="login-container">
-        <h1>Rastro Selvagem</h1>
-        <p class="subtitle">Crie sua conta para acessar o Backlog</p>
-        
-        <form method="post">
-            {% csrf_token %}
-            <!-- O Django renderiza as tags <p>, <label> e <input> aqui, e nosso CSS captura elas automaticamente -->
-            {{ form.as_p }}
-            
-            <button type="submit">Finalizar Cadastro</button>
-        </form>
-        
-        <div class="footer-link">
-            <p>Já tem uma conta? <a href="{% url 'login' %}">Faça o login aqui</a></p>
-        </div>
-    </div>
+        <section class="marca" aria-label="Rastro Selvagem">
+            <div class="marca__logo">
+                <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+                    <ellipse cx="14" cy="26" rx="6" ry="8" transform="rotate(-18 14 26)"/>
+                    <ellipse cx="26" cy="15" rx="6" ry="8.5" transform="rotate(-6 26 15)"/>
+                    <ellipse cx="40" cy="15" rx="6" ry="8.5" transform="rotate(6 40 15)"/>
+                    <ellipse cx="52" cy="26" rx="6" ry="8" transform="rotate(18 52 26)"/>
+                    <path d="M32 29c-9 0-18 9-18 17 0 6 5 9 10 9 3 0 5-1 8-1s5 1 8 1c5 0 10-3 10-9 0-8-9-17-18-17z"/>
+                </svg>
+                <span>Rastro<br>Selvagem</span>
+            </div>
 
+            <div class="marca__chamada">
+                <h2>Cada entrega deixa um rastro de cuidado.</h2>
+                <p>Planeje projetos, priorize histórias e acompanhe o trabalho pela proteção da vida selvagem.</p>
+                <div class="marca__linha"></div>
+            </div>
+
+            <div class="marca__rodape">
+                RASTRO SELVAGEM<br>
+                Gestão de projetos · Resgate e reabilitação
+            </div>
+        </section>
+
+        <section class="acesso">
+            <div class="acesso__conteudo">
+                <h1>Crie sua conta</h1>
+                <p class="acesso__sub">Comece a organizar o próximo passo da sua equipe.</p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="erro-geral" role="alert">
+                            {% for erro in form.non_field_errors %}<p>{{ erro }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="campo{% if field.errors %} campo--erro{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}{% if field.field.required %} <span aria-hidden="true">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="campo__ajuda">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% for erro in field.errors %}
+                                <p class="campo__erro" role="alert">{{ erro }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <button class="botao" type="submit">Criar conta</button>
+                </form>
+
+                <p class="entrar">
+                    <a class="link" href="{% url 'login' %}">Já tem uma conta? Entrar</a>
+                </p>
+
+                <p class="aviso">Acesso restrito · Autenticação obrigatória</p>
+            </div>
+        </section>
+
+    </main>
 </body>
 </html>

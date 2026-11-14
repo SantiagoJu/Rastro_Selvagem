@@ -1,7 +1,285 @@
-<h1>Entrar no Rastro Selvagem</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Entrar</button>
-</form>
-<p>Não tem conta? <a href="{% url 'cadastro' %}">Cadastre-se aqui</a></p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrar · Rastro Selvagem</title>
+
+    {# Questrial é a alternativa livre à Century Gothic, usada quando ela não está instalada #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bordo: #4F000B;
+            --creme: #F9DEC9;
+            --fundo-form: #FDF8F1;
+            --texto: #4A4647;
+            --cinza: #6D696A;
+            --erro: #C0392B;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Century Gothic', 'Questrial', 'Segoe UI', sans-serif;
+            color: var(--texto);
+            background: var(--fundo-form);
+            min-height: 100vh;
+        }
+
+        .login {
+            display: grid;
+            grid-template-columns: 43fr 57fr;
+            min-height: 100vh;
+        }
+
+        /* ---------- Painel da marca (esquerda) ---------- */
+        .marca {
+            background: var(--bordo);
+            color: var(--creme);
+            padding: 72px 70px 56px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .marca__logo {
+            background: var(--creme);
+            color: var(--bordo);
+            border-radius: 12px;
+            padding: 52px 40px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            max-width: 500px;
+        }
+
+        .marca__logo svg { width: 52px; height: 52px; flex-shrink: 0; }
+
+        .marca__logo span {
+            font-size: 1.9rem;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        .marca__chamada { margin-top: auto; }
+
+        .marca__chamada h2 {
+            font-size: 2.6rem;
+            line-height: 1.2;
+            font-weight: 700;
+            max-width: 480px;
+        }
+
+        .marca__chamada p {
+            margin-top: 48px;
+            font-size: 1.1rem;
+            line-height: 1.55;
+            max-width: 500px;
+        }
+
+        .marca__linha {
+            width: 80px;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--creme);
+            margin-top: 64px;
+        }
+
+        .marca__rodape {
+            margin-top: auto;
+            padding-top: 120px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* ---------- Formulário (direita) ---------- */
+        .acesso {
+            display: flex;
+            align-items: center;
+            padding: 48px 8vw;
+        }
+
+        .acesso__conteudo { width: 100%; max-width: 622px; }
+
+        .acesso h1 {
+            font-size: 2.9rem;
+            font-weight: 700;
+            color: var(--bordo);
+            line-height: 1.15;
+        }
+
+        .acesso__sub {
+            margin-top: 28px;
+            font-size: 1.1rem;
+            color: var(--texto);
+        }
+
+        form { margin-top: 48px; }
+
+        .campo { margin-bottom: 30px; }
+
+        .campo label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .campo input {
+            width: 100%;
+            height: 48px;
+            padding: 0 14px;
+            font: inherit;
+            font-size: 1rem;
+            color: var(--texto);
+            background: #fff;
+            border: 1px solid var(--cinza);
+            border-radius: 8px;
+        }
+
+        .campo input:focus-visible {
+            outline: 3px solid var(--creme);
+            border-color: var(--bordo);
+        }
+
+        .campo--erro input { border-color: var(--erro); }
+
+        .campo__erro,
+        .erro-geral {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: var(--erro);
+        }
+
+        .erro-geral {
+            margin: 0 0 24px;
+            padding: 12px 14px;
+            border: 1px solid var(--erro);
+            border-radius: 8px;
+            background: #fdecea;
+        }
+
+        .link {
+            color: var(--bordo);
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+
+        .link:hover,
+        .link:focus-visible { text-decoration: underline; }
+
+        .esqueceu { display: inline-block; margin-top: 4px; }
+
+        .botao {
+            display: block;
+            width: 100%;
+            height: 48px;
+            margin-top: 36px;
+            font: inherit;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--creme);
+            background: var(--bordo);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .botao:hover { background: #3a0008; }
+        .botao:focus-visible { outline: 3px solid var(--creme); outline-offset: 2px; box-shadow: 0 0 0 5px var(--bordo); }
+
+        .cadastro { margin-top: 36px; }
+
+        .aviso {
+            margin-top: 28px;
+            font-size: 0.85rem;
+            color: var(--texto);
+        }
+
+        /* ---------- Telas menores ---------- */
+        @media (max-width: 900px) {
+            .login { grid-template-columns: 1fr; }
+            .marca { border-radius: 0; padding: 32px 24px; }
+            .marca__logo { padding: 24px; }
+            .marca__chamada,
+            .marca__linha,
+            .marca__rodape { display: none; }
+            .acesso { padding: 36px 24px; }
+            .acesso h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <main class="login">
+
+        <section class="marca" aria-label="Rastro Selvagem">
+            <div class="marca__logo">
+                <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+                    <ellipse cx="14" cy="26" rx="6" ry="8" transform="rotate(-18 14 26)"/>
+                    <ellipse cx="26" cy="15" rx="6" ry="8.5" transform="rotate(-6 26 15)"/>
+                    <ellipse cx="40" cy="15" rx="6" ry="8.5" transform="rotate(6 40 15)"/>
+                    <ellipse cx="52" cy="26" rx="6" ry="8" transform="rotate(18 52 26)"/>
+                    <path d="M32 29c-9 0-18 9-18 17 0 6 5 9 10 9 3 0 5-1 8-1s5 1 8 1c5 0 10-3 10-9 0-8-9-17-18-17z"/>
+                </svg>
+                <span>Rastro<br>Selvagem</span>
+            </div>
+
+            <div class="marca__chamada">
+                <h2>Cada entrega deixa um rastro de cuidado.</h2>
+                <p>Planeje projetos, priorize histórias e acompanhe o trabalho pela proteção da vida selvagem.</p>
+                <div class="marca__linha"></div>
+            </div>
+
+            <div class="marca__rodape">
+                RASTRO SELVAGEM<br>
+                Gestão de projetos · Resgate e reabilitação
+            </div>
+        </section>
+
+        <section class="acesso">
+            <div class="acesso__conteudo">
+                <h1>Bem-vinda de volta</h1>
+                <p class="acesso__sub">Entre para acessar seus projetos e backlogs.</p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="erro-geral" role="alert">
+                            {% for erro in form.non_field_errors %}<p>{{ erro }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="campo{% if field.errors %} campo--erro{% endif %}">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}{% if field.field.required %} <span aria-hidden="true">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% for erro in field.errors %}
+                                <p class="campo__erro" role="alert">{{ erro }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    {# Troque o href pela rota de recuperação de senha quando ela existir #}
+                    <a class="link esqueceu" href="#">Esqueceu sua senha?</a>
+
+                    <button class="botao" type="submit">Entrar</button>
+                </form>
+
+                <p class="cadastro">
+                    <a class="link" href="{% url 'cadastro' %}">Ainda não tem uma conta? Cadastre-se</a>
+                </p>
+
+                <p class="aviso">Acesso restrito · Autenticação obrigatória</p>
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>
