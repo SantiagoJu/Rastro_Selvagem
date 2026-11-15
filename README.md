@@ -8,25 +8,7 @@ O sistema utiliza conceitos do Scrum e ferramentas de priorização de tarefas, 
 
 A aplicação foi desenvolvida utilizando Python e Django, com PostgreSQL como sistema de gerenciamento de banco de dados.
 
-## 2. Palavras que aparecem no sistema
-
-| Termo | Significado |
-|---|---|
-| Projeto | Conjunto de atividades organizadas com um objetivo. |
-| Product Backlog | Lista de funcionalidades e demandas do produto. |
-| Sprint Backlog | Conjunto de atividades selecionadas para uma Sprint. |
-| Épico | Funcionalidade ou objetivo amplo que pode ser dividido em histórias menores. |
-| História de Usuário | Descrição de uma funcionalidade sob a perspectiva de quem utilizará o sistema. |
-| Critério de Aceitação | Condições que determinam se uma funcionalidade atende ao que foi solicitado. |
-| Kanban | Quadro visual utilizado para acompanhar o andamento das atividades. |
-| MoSCoW | Método de priorização que classifica demandas em Must have, Should have, Could have e Won't have. |
-| RICE | Método de priorização baseado em alcance, impacto, confiança e esforço. |
-| Scrum | Metodologia ágil utilizada para organizar o desenvolvimento de projetos. |
-| Administrador | Usuário com papel administrativo. |
-| Gestor | Perfil de usuário destinado à gestão. |
-| Voluntário | Perfil de usuário destinado à participação nas atividades. |
-
-## 3. O que o sistema faz?
+## 2. O que o sistema faz?
 
 O Rastro Selvagem disponibiliza funcionalidades para organização e acompanhamento de projetos.
 
@@ -49,7 +31,7 @@ Os status utilizados no sistema são:
 - Em revisão;
 - Concluída.
 
-## 4. O que você precisa instalar?
+## 3. O que você precisa instalar?
 
 Para executar o projeto localmente, é necessário ter os seguintes programas:
 
@@ -70,7 +52,7 @@ Entre as principais dependências estão:
 - python-dotenv;
 - CustomTkinter.
 
-## 5. Instalação passo a passo
+## 4. Instalação passo a passo
 
 ### Passo 1 — Baixar o projeto
 
@@ -150,7 +132,7 @@ python manage.py runserver
 
 O servidor local será iniciado e a aplicação poderá ser acessada pelo navegador.
 
-## 6. Como abrir o sistema no navegador?
+## 5. Como abrir o sistema no navegador?
 
 Depois de iniciar o servidor com:
 
@@ -174,12 +156,12 @@ Para acessar diretamente as funcionalidades:
 
 Para encerrar o servidor, volte ao terminal e pressione `CTRL + C`.
 
-## 7. Onde estão os documentos do projeto?
+## 6. Onde estão os documentos do projeto?
 
 Os principais arquivos e diretórios estão organizados na raiz do repositório:
 
 
-## 9. Participantes
+## 7. Participantes
 
 
 A relação completa dos participantes responsáveis pelo desenvolvimento:.
