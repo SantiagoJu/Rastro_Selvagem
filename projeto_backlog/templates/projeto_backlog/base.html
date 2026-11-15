@@ -364,20 +364,25 @@
 
         {% with nome=request.resolver_match.url_name|default:'' %}
         <nav class="nav" aria-label="Navegação principal">
-            {# Troque os href="#" pelas suas URLs quando tiver os nomes #}
-            <a class="nav-link{% block nav_geral %}{% endblock %}" href="#">
+            {# O projeto atual vem do contexto: projeto, historia ou object (história, épico, backlog ou critério) #}
+            {% firstof projeto.pk historia.backlog.projeto.pk object.backlog.projeto.pk object.projeto.pk object.historia_usuario.backlog.projeto.pk as pid %}
+            {% url 'projeto_backlog:projeto_detail' pid as url_geral %}
+            {% url 'criterios_epicos:historia_list' pid as url_backlog %}
+            {% url 'criterios_epicos:historia_kanban' pid as url_kanban %}
+            {% url 'criterios_epicos:epico_list' pid as url_epicos %}
+            <a class="nav-link{% block nav_geral %}{% endblock %}" href="{{ url_geral|default:'#' }}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
                 Visão geral
             </a>
-            <a class="nav-link{% block nav_backlog %}{% endblock %}" href="#">
+            <a class="nav-link{% block nav_backlog %}{% endblock %}" href="{{ url_backlog|default:'#' }}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
                 Backlog
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link{% block nav_kanban %}{% endblock %}" href="{{ url_kanban|default:'#' }}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
                 Quadro Kanban
             </a>
-            <a class="nav-link{% block nav_epicos %}{% endblock %}" href="#">
+            <a class="nav-link{% block nav_epicos %}{% endblock %}" href="{{ url_epicos|default:'#' }}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></svg>
                 Épicos
             </a>

@@ -65,6 +65,8 @@ Se historia_status ou historia_mover não existirem, a tela se adapta sem erro.
 
     .side-move { display: flex; width: 100%; margin-top: 40px; }
     .side-meta { margin-top: 32px; font-size: 0.85rem; line-height: 1.7; color: var(--texto-suave); }
+    .side-actions { margin-top: 40px; display: flex; flex-direction: column; gap: 12px; }
+    .side-actions .btn { width: 100%; }
 
     @media (max-width: 960px) {
         .criteria-actions .btn { width: 100%; }
@@ -163,15 +165,22 @@ Se historia_status ou historia_mover não existirem, a tela se adapta sem erro.
                data-confidence="{{ historia.rice_confidence|unlocalize }}"
                data-effort="{{ historia.rice_effort|unlocalize }}">
                 Reach {{ historia.rice_reach }} &middot; Impact {{ historia.get_rice_impact_display }}<br>
-                Confidence {{ historia.rice_confidence }}% &middot; Effort {{ historia.rice_effort }} pessoa-mês<br>
+                Confidence {{ historia.rice_confidence }}% &middot; Effort {{ historia.rice_effort }} pontos<br>
                 <span id="rice-formula"></span>
             </p>
         </div>
 
-        {% url 'criterios_epicos:historia_mover' historia.pk as url_mover %}
-        {% if url_mover %}
-            <a href="{{ url_mover }}" class="btn btn-secondary side-move">Mover para outro backlog</a>
-        {% endif %}
+        <div class="side-actions">
+            {% url 'criterios_epicos:historia_mover' historia.pk as url_mover %}
+            {% if url_mover %}
+                <a href="{{ url_mover }}" class="btn btn-secondary">Mover para outro backlog</a>
+            {% endif %}
+
+            {% url 'criterios_epicos:historia_delete' historia.pk as url_excluir %}
+            {% if url_excluir %}
+                <a href="{{ url_excluir }}" class="btn btn-danger">Excluir história</a>
+            {% endif %}
+        </div>
 
         <p class="side-meta">
             Projeto: {{ historia.backlog.projeto.nome }}<br>

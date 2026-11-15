@@ -1,0 +1,367 @@
+{% extends 'projeto_backlog/base.html' %}
+
+{% comment %}
+Contexto esperado da view:
+  projeto       -> projeto atual
+  backlog_atual -> backlog selecionado
+  epico_atual   -> épico filtrado (opcional)
+  colunas       -> lista com uma coluna por status, na ordem do quadro:
+                   [{"valor": "A_FAZER", "rotulo": "A fazer", "historias": [...]}, ...]
+                   (as histórias de cada coluna já vêm ordenadas por RICE, da maior para a menor)
+
+Campos usados em cada história: nome, epico, moscow, pontos_historia, rice_scored, solicitante.
+URLs (app criterios_epicos): historia_create, historia_detail, historia_update,
+historia_status (POST, usada ao arrastar) e historia_delete (opcional).
+Sem a URL historia_status os cartões ficam fixos, e o status muda pela tela da história.
+{% endcomment %}
+
+{% load l10n %}
+
+{% block title %}Quadro Kanban{% endblock %}
+
+{% block breadcrumb %}<a href="{% url 'projeto_backlog:projeto_list' %}">Projetos</a> <span>/</span> {{ projeto.nome }}{% endblock %}
+
+{% block nav_kanban %} active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topbar-crumb a { text-decoration: none; }
+    .topbar-crumb a:hover { text-decoration: underline; }
+
+    .field-label { display: block; margin-bottom: 14px; font-size: 0.95rem; font-weight: 600; color: var(--texto); }
+
+    .kanban-controls { margin-top: 40px; display: flex; align-items: flex-start; gap: 24px; }
+    .kanban-controls .control-backlog { width: 340px; flex-shrink: 0; }
+    .kanban-controls .control-epico { width: 300px; flex-shrink: 0; }
+    .kanban-controls .select { width: 100%; height: 43px; padding-left: 14px; border: 1px solid var(--borda-campo); border-radius: 8px; background-color: transparent; font-family: inherit; font-size: 0.95rem; font-weight: 500; color: var(--texto); }
+    .kanban-controls .select:focus { outline: none; border-color: var(--vinho); box-shadow: 0 0 0 3px rgba(79, 0, 11, 0.12); }
+
+    .kanban-hint { flex: 1; padding: 20px 24px; border-radius: 10px; background: var(--verde-botao); }
+    .kanban-hint strong { display: block; font-size: 1rem; color: var(--vinho); }
+    .kanban-hint span { display: block; margin-top: 14px; font-size: 0.85rem; color: var(--texto); }
+
+    /* Quadro */
+    .board { margin-top: 40px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; align-items: start; }
+
+    .kanban-col {
+        padding: 16px 14px 18px;
+        border-top: 4px solid #6b6b6b;
+        border-radius: 12px;
+        background: var(--verde-claro);
+        transition: background-color 0.15s ease;
+    }
+    .kanban-col:nth-child(2) { border-top-color: var(--verde-botao); }
+    .kanban-col:nth-child(3) { border-top-color: #d08a2e; }
+    .kanban-col:nth-child(4) { border-top-color: #5e7d4a; }
+    .kanban-col.drag-over { background: #dce4d0; outline: 2px dashed var(--vinho); outline-offset: -6px; }
+
+    .col-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 0 6px; font-size: 1.05rem; color: var(--texto); }
+    .col-head .col-count { font-weight: 600; }
+
+    .card-list { display: flex; flex-direction: column; gap: 12px; min-height: 72px; }
+    .k-vazio { padding: 18px 8px; text-align: center; font-size: 0.85rem; color: var(--texto-suave); }
+    .k-vazio[hidden] { display: none; }
+
+    .k-card {
+        padding: 14px 14px 16px;
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        background: #fffbf7;
+    }
+    .k-card[draggable="true"] { cursor: grab; }
+    .k-card.dragging { opacity: 0.45; }
+
+    .k-top { display: flex; align-items: center; justify-content: space-between; }
+    .k-code { font-size: 0.8rem; color: var(--texto-suave); }
+
+    .k-tools { display: flex; align-items: center; gap: 6px; }
+    .k-delete {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
+        color: var(--erro);
+    }
+    .k-delete svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .k-delete:hover { background: rgba(179, 38, 30, 0.1); }
+    .k-delete:focus-visible { outline: 3px solid rgba(179, 38, 30, 0.35); outline-offset: 2px; }
+
+    .k-menu { position: relative; }
+    .k-menu summary {
+        list-style: none;
+        padding: 0 4px;
+        font-size: 1rem;
+        line-height: 1;
+        letter-spacing: 1px;
+        color: var(--texto);
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .k-menu summary::-webkit-details-marker { display: none; }
+    .k-menu summary:hover { background: rgba(79, 0, 11, 0.08); }
+    .k-menu summary:focus-visible { outline: 3px solid rgba(79, 0, 11, 0.35); outline-offset: 2px; }
+    .k-menu-list {
+        position: absolute;
+        top: 26px;
+        right: 0;
+        z-index: 10;
+        min-width: 150px;
+        padding: 6px;
+        border: 1px solid var(--borda);
+        border-radius: 8px;
+        background: var(--creme);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+    .k-menu-list a { display: block; padding: 8px 10px; border-radius: 6px; font-size: 0.85rem; color: var(--texto); text-decoration: none; }
+    .k-menu-list a:hover { background: var(--verde-claro); }
+    .k-menu-list a.danger { color: var(--erro); }
+
+    .k-title { display: block; margin-top: 14px; min-height: 2.6em; font-size: 1.05rem; font-weight: 700; line-height: 1.3; color: var(--vinho); text-decoration: none; }
+    .k-title:hover { text-decoration: underline; }
+
+    .k-epic { display: block; margin-top: 22px; width: 148px; max-width: 100%; padding: 6px 10px; border-radius: 4px; background: var(--verde-botao); font-size: 0.8rem; font-weight: 700; color: var(--vinho); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .k-row { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .k-moscow { padding: 6px 12px; border-radius: 4px; background: var(--rosa-ajuda); font-size: 0.8rem; font-weight: 700; color: var(--vinho); }
+    .k-pts { font-size: 0.85rem; font-weight: 600; color: var(--texto); }
+
+    .k-foot { margin-top: 18px; display: flex; align-items: center; gap: 28px; }
+    .k-rice { font-size: 0.85rem; color: var(--texto); }
+    .k-rice b { margin-left: 4px; font-weight: 700; }
+    .k-owner { font-size: 0.75rem; color: var(--texto-suave); }
+
+    .kanban-aviso { margin-top: 16px; font-size: 0.85rem; color: var(--erro); }
+    .kanban-aviso:empty { display: none; }
+    .kanban-note { margin-top: 20px; font-size: 0.85rem; color: var(--texto-suave); }
+
+    @media (max-width: 1100px) {
+        .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 960px) {
+        .kanban-controls { flex-direction: column; align-items: stretch; }
+        .kanban-controls .control-backlog, .kanban-controls .control-epico { width: 100%; }
+        .page-header .btn { margin-top: 0; }
+    }
+    @media (max-width: 640px) {
+        .board { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Rastro Selvagem / {{ projeto.nome }}</p>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Quadro Kanban</h1>
+        <p class="page-subtitle">{{ backlog_atual.nome }} &middot; acompanhe as histórias até a entrega.</p>
+    </div>
+    <a href="{% url 'criterios_epicos:historia_create' %}?projeto={{ projeto.pk }}{% if backlog_atual %}&amp;backlog={{ backlog_atual.pk }}{% endif %}" class="btn btn-primary">Criar história</a>
+</div>
+
+<form method="get" class="kanban-controls">
+    <div class="control-backlog">
+        <label class="field-label" for="filtro-backlog">Backlog</label>
+        <select name="backlog" id="filtro-backlog" class="select" onchange="this.form.submit()">
+            {% for b in projeto.backlogs.all %}
+                <option value="{{ b.pk }}"{% if backlog_atual and b.pk == backlog_atual.pk %} selected{% endif %}>{{ b.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="control-epico">
+        <label class="field-label" for="filtro-epico">Épico</label>
+        <select name="epico" id="filtro-epico" class="select" onchange="this.form.submit()">
+            <option value="">Todos os épicos</option>
+            {% for e in projeto.epicos.all %}
+                <option value="{{ e.pk }}"{% if epico_atual and e.pk == epico_atual.pk %} selected{% endif %}>{{ e.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="kanban-hint">
+        <strong>Arraste os cartões entre as colunas.</strong>
+        <span>Ou abra uma história para alterar o status.</span>
+    </div>
+
+    <noscript><button type="submit" class="btn btn-secondary btn-sm">Aplicar</button></noscript>
+</form>
+
+<div class="board" id="quadro">
+    {% for coluna in colunas %}
+    <section class="kanban-col" data-status="{{ coluna.valor }}" aria-label="{{ coluna.rotulo }}">
+        <header class="col-head">
+            <span>{{ coluna.rotulo }}</span>
+            <span class="col-count">{{ coluna.historias|length }}</span>
+        </header>
+
+        <div class="card-list">
+            {% for h in coluna.historias %}
+                {% url 'criterios_epicos:historia_status' h.pk as url_status %}
+                <article class="k-card"
+                         {% if url_status %}draggable="true" data-url="{{ url_status }}"{% endif %}
+                         data-pontos="{{ h.pontos_historia|unlocalize }}"
+                         data-rice="{{ h.rice_scored|unlocalize }}">
+                    <div class="k-top">
+                        <span class="k-code">RS-{{ h.pk|stringformat:"03d" }}</span>
+
+                        <div class="k-tools">
+                            {% url 'criterios_epicos:historia_delete' h.pk as url_excluir %}
+                            {% if url_excluir %}
+                                <a href="{{ url_excluir }}" class="k-delete" title="Excluir história" aria-label="Excluir história RS-{{ h.pk|stringformat:'03d' }}">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
+                                </a>
+                            {% endif %}
+
+                            <details class="k-menu">
+                                <summary aria-label="Ações da história">&bull;&bull;&bull;</summary>
+                                <div class="k-menu-list">
+                                    <a href="{% url 'criterios_epicos:historia_detail' h.pk %}">Abrir</a>
+                                    <a href="{% url 'criterios_epicos:historia_update' h.pk %}">Editar</a>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'criterios_epicos:historia_detail' h.pk %}" class="k-title">{{ h.nome }}</a>
+
+                    <span class="k-epic">{{ h.epico.nome|default:"Sem épico" }}</span>
+
+                    <div class="k-row">
+                        <span class="k-moscow">{{ h.get_moscow_display|cut:" have" }}</span>
+                        <span class="k-pts">{{ h.pontos_historia }} pts</span>
+                    </div>
+
+                    <div class="k-foot">
+                        <span class="k-rice">RICE<b>{{ h.rice_scored|floatformat:"-1" }}</b></span>
+                        <span class="k-owner">{{ h.solicitante.first_name|default:h.solicitante.username }}</span>
+                    </div>
+                </article>
+            {% endfor %}
+
+            <p class="k-vazio"{% if coluna.historias %} hidden{% endif %}>Nenhuma história</p>
+        </div>
+    </section>
+    {% endfor %}
+</div>
+
+<p class="kanban-aviso" id="kanban-aviso" role="alert"></p>
+<p class="kanban-note" id="kanban-rodape">As mudanças de status são salvas no backlog atual.</p>
+
+<form id="csrf-holder" hidden>{% csrf_token %}</form>
+
+<script>
+    (function () {
+        var quadro = document.getElementById('quadro');
+        var aviso = document.getElementById('kanban-aviso');
+        var rodape = document.getElementById('kanban-rodape');
+        var token = document.querySelector('#csrf-holder [name=csrfmiddlewaretoken]').value;
+        var arrastando = null;
+
+        // Links dentro do cartão não devem iniciar o arraste sozinhos
+        quadro.querySelectorAll('.k-card a').forEach(function (a) { a.setAttribute('draggable', 'false'); });
+
+        function numero(card, atributo) {
+            var v = parseFloat(card.dataset[atributo]);
+            return isNaN(v) ? 0 : v;
+        }
+
+        function inserirOrdenado(lista, card) {
+            var cards = lista.querySelectorAll('.k-card');
+            for (var i = 0; i < cards.length; i++) {
+                if (cards[i] !== card && numero(cards[i], 'rice') < numero(card, 'rice')) {
+                    lista.insertBefore(card, cards[i]);
+                    return;
+                }
+            }
+            var vazio = lista.querySelector('.k-vazio');
+            lista.insertBefore(card, vazio);
+        }
+
+        function atualizar() {
+            var totalCards = 0, totalPontos = 0;
+
+            quadro.querySelectorAll('.kanban-col').forEach(function (col) {
+                var cards = col.querySelectorAll('.k-card');
+                col.querySelector('.col-count').textContent = cards.length;
+                col.querySelector('.k-vazio').hidden = cards.length > 0;
+
+                totalCards += cards.length;
+                cards.forEach(function (c) { totalPontos += numero(c, 'pontos'); });
+            });
+
+            rodape.textContent =
+                totalCards + (totalCards === 1 ? ' história' : ' histórias') + ' \u00b7 ' +
+                totalPontos + (totalPontos === 1 ? ' ponto' : ' pontos') +
+                ' \u00b7 As mudanças de status são salvas no backlog atual.';
+        }
+
+        quadro.addEventListener('dragstart', function (e) {
+            var card = e.target.closest('.k-card');
+            if (!card || card.getAttribute('draggable') !== 'true') return;
+            arrastando = card;
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', card.dataset.url || '');
+        });
+
+        quadro.addEventListener('dragend', function () {
+            if (arrastando) arrastando.classList.remove('dragging');
+            arrastando = null;
+            quadro.querySelectorAll('.drag-over').forEach(function (c) { c.classList.remove('drag-over'); });
+        });
+
+        quadro.addEventListener('dragover', function (e) {
+            var col = e.target.closest('.kanban-col');
+            if (!col || !arrastando) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            col.classList.add('drag-over');
+        });
+
+        quadro.addEventListener('dragleave', function (e) {
+            var col = e.target.closest('.kanban-col');
+            if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+        });
+
+        quadro.addEventListener('drop', function (e) {
+            var col = e.target.closest('.kanban-col');
+            if (!col || !arrastando) return;
+            e.preventDefault();
+            col.classList.remove('drag-over');
+
+            var card = arrastando;
+            var origem = card.parentNode;
+            var proximo = card.nextElementSibling;
+            var lista = col.querySelector('.card-list');
+
+            if (origem === lista) return;
+
+            aviso.textContent = '';
+            inserirOrdenado(lista, card);
+            atualizar();
+
+            fetch(card.dataset.url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams({ status: col.dataset.status })
+            }).then(function (resposta) {
+                if (!resposta.ok) throw new Error('falha');
+            }).catch(function () {
+                origem.insertBefore(card, proximo);
+                atualizar();
+                aviso.textContent = 'Não foi possível salvar o novo status. A história voltou para a coluna anterior.';
+            });
+        });
+
+        atualizar();
+    })();
+</script>
+{% endblock %}

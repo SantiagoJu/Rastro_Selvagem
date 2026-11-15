@@ -13,6 +13,24 @@
     .header-actions .btn { width: auto; padding: 0 24px; }
 
     .card + .card { margin-top: 24px; }
+
+    .shortcuts { margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .shortcut {
+        display: block;
+        padding: 18px 20px;
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        background: var(--creme);
+        text-decoration: none;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .shortcut:hover { background: var(--verde-claro); border-color: var(--verde-botao); }
+    .shortcut:focus-visible { outline: 3px solid rgba(79, 0, 11, 0.35); outline-offset: 2px; }
+    .shortcut-primary { background: var(--verde-botao); border-color: var(--verde-botao); }
+    .shortcut-primary:hover { background: var(--verde-botao-hover); border-color: var(--verde-botao-hover); }
+    .shortcut-title { display: block; font-size: 1rem; font-weight: 700; color: var(--vinho); }
+    .shortcut-text { display: block; margin-top: 8px; font-size: 0.85rem; color: var(--texto-suave); }
+    .shortcut-primary .shortcut-text { color: var(--texto); }
     .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
     .badge {
@@ -41,10 +59,35 @@
         <p class="page-subtitle">Backlogs e épicos deste projeto.</p>
     </div>
     <div class="header-actions">
-        <a href="{% url 'projeto_backlog:backlog_create' %}" class="btn btn-primary">Criar backlog</a>
+        <a href="{% url 'projeto_backlog:backlog_create' %}?projeto={{ projeto.pk }}" class="btn btn-primary">Criar backlog</a>
         <a href="{% url 'projeto_backlog:projeto_update' projeto.pk %}" class="btn btn-secondary">Editar projeto</a>
     </div>
 </div>
+
+{% url 'criterios_epicos:historia_list' projeto.pk as url_backlog %}
+{% url 'criterios_epicos:historia_kanban' projeto.pk as url_kanban %}
+{% url 'criterios_epicos:epico_list' projeto.pk as url_epicos %}
+
+<nav class="shortcuts" aria-label="Áreas do projeto">
+    {% if url_backlog %}
+    <a href="{{ url_backlog }}" class="shortcut">
+        <span class="shortcut-title">Backlog &rarr;</span>
+        <span class="shortcut-text">Priorize as histórias com MoSCoW e RICE.</span>
+    </a>
+    {% endif %}
+    {% if url_kanban %}
+    <a href="{{ url_kanban }}" class="shortcut shortcut-primary">
+        <span class="shortcut-title">Quadro Kanban &rarr;</span>
+        <span class="shortcut-text">Acompanhe as histórias até a entrega.</span>
+    </a>
+    {% endif %}
+    {% if url_epicos %}
+    <a href="{{ url_epicos }}" class="shortcut">
+        <span class="shortcut-title">Épicos &rarr;</span>
+        <span class="shortcut-text">Agrupe histórias por objetivo.</span>
+    </a>
+    {% endif %}
+</nav>
 
 <div style="margin-top: 40px;">
     <section class="card">
@@ -72,8 +115,8 @@
                         </td>
                         <td>
                             <div class="row-actions">
-                                <a href="{% url 'backlog_update' backlog.pk %}" class="btn btn-secondary btn-sm">Editar</a>
-                                <a href="{% url 'backlog_delete' backlog.pk %}" class="btn btn-danger btn-sm">Excluir</a>
+                                <a href="{% url 'projeto_backlog:backlog_update' backlog.pk %}" class="btn btn-secondary btn-sm">Editar</a>
+                                <a href="{% url 'projeto_backlog:backlog_delete' backlog.pk %}" class="btn btn-danger btn-sm">Excluir</a>
                             </div>
                         </td>
                     </tr>

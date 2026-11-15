@@ -8,7 +8,8 @@ Contexto esperado da view:
   backlog_atual -> backlog selecionado (opcional)
 Campos usados em cada história: nome, epico, moscow, pontos_historia, rice_scored, status.
 O código (RS-024) é montado com o pk da história.
-URLs (app criterios_epicos): historia_create, historia_detail, historia_mover.
+URLs (app criterios_epicos): historia_create, historia_detail e historia_update.
+Se existir historia_mover, o link Mover usa essa URL; senão leva para a edição da história.
 {% endcomment %}
 
 {% block title %}Backlog do projeto{% endblock %}
@@ -138,7 +139,7 @@ URLs (app criterios_epicos): historia_create, historia_detail, historia_mover.
         <h1 class="page-title">Backlog do projeto</h1>
         <p class="page-subtitle">Priorize histórias e planeje as próximas entregas.</p>
     </div>
-    <a href="{% url 'criterios_epicos:historia_create' %}" class="btn btn-primary">Criar história</a>
+    <a href="{% url 'criterios_epicos:historia_create' %}?projeto={{ projeto.pk }}{% if backlog_atual %}&amp;backlog={{ backlog_atual.pk }}{% endif %}" class="btn btn-primary">Criar história</a>
 </div>
 
 <div class="backlog-bar">
@@ -218,7 +219,9 @@ URLs (app criterios_epicos): historia_create, historia_detail, historia_mover.
                 <td class="center">{{ h.pontos_historia }}</td>
                 <td class="center">{{ h.rice_scored|floatformat:"-1" }}</td>
                 <td>{{ h.get_status_display }}</td>
-                <td><a href="{% url 'criterios_epicos:historia_mover' h.pk %}" class="story-action">Mover</a></td>
+                {% url 'criterios_epicos:historia_mover' h.pk as url_mover %}
+                {% url 'criterios_epicos:historia_update' h.pk as url_editar %}
+                <td><a href="{{ url_mover|default:url_editar }}" class="story-action">Mover</a></td>
             </tr>
             {% empty %}
             <tr>

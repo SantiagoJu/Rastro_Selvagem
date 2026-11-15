@@ -1,4 +1,4 @@
-<div class="criterio-row">
+<div class="criterio-row"{% if f.DELETE.value %} hidden{% endif %}>
     {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
     {% if f.DELETE %}<span hidden>{{ f.DELETE }}</span>{% endif %}
 
