@@ -160,6 +160,39 @@ Para encerrar o servidor, volte ao terminal e pressione `CTRL + C`.
 
 Os principais arquivos e diretórios estão organizados na raiz do repositório:
 
+Rastro_Selvagem/
+│
+├── config/
+│   └── Configurações principais do Django
+│
+├── contas/
+│   └── Cadastro, autenticação e gerenciamento de usuários
+│
+├── criterios_epicos/
+│   └── Épicos, histórias de usuário e critérios de aceitação
+│
+├── projeto_backlog/
+│   └── Projetos e gerenciamento de backlogs
+│
+├── .gitIgnore
+│   └── Arquivos e pastas ignorados pelo Git
+│
+├── manage.py
+│   └── Arquivo de execução e gerenciamento do Django
+│
+├── requirements.txt
+│   └── Lista de dependências do projeto
+│
+├── script.sql
+│   └── Script SQL relacionado à estrutura do banco de dados
+│
+└── README.md
+    └── Documentação principal do projeto
+
+Os principais arquivos de código-fonte estão distribuídos entre os diretórios contas, criterios_epicos, projeto_backlog e config.
+
+O arquivo script.sql contém definições relacionadas ao banco de dados, enquanto o requirements.txt apresenta as dependências necessárias para executar o projeto.
+
 
 ## 7. Participantes
 
