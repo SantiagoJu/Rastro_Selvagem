@@ -9,13 +9,16 @@ class Epico(models.Model):
     data_criacao = models.DateField(auto_now_add=True)
     projeto = models.ForeignKey(Projeto, on_delete=models.PROTECT, related_name= "epicos")
 
+    def __str__(self):
+        return self.nome
+
 class HistoriaUsuario (models.Model):
     PONTOS = [(n, str(n)) 
               for n in (0,1,2,3,5,8,13,21,34,55)
     ]
     class MoSCoW (models.TextChoices):
         M = "M", "Must have"
-        S = "s", "Should have"
+        S = "S", "Should have"
         C = "C", "Could have"
         W = "W", "Won't have"
 
@@ -24,7 +27,7 @@ class HistoriaUsuario (models.Model):
         ALTO = "2", "Alto (2)"
         MEDIO = "1", "Médio (1)"
         BAIXO = "0.5" "Baixo (0.5)"
-        MINIMO = "0,25" "Mínimo (0.25)"
+        MINIMO = "0.25" "Mínimo (0.25)"
 
     class Confidence(models.IntegerChoices):
         ALTA = 100, "Alta (100%)"
@@ -35,7 +38,7 @@ class HistoriaUsuario (models.Model):
     class Status (models.TextChoices):
         A_FAZER = "A_FAZER", "A fazer"
         EM_ANDAMENTO = "EM_ANDAMENTO", "Em andamento"
-        EM_REVISAO = "EM REVISAO", "Em revisão"
+        EM_REVISAO = "EM_REVISAO", "Em revisão"
         CONCLUIDA = "CONCLUIDA", "Concluída"
 
         
@@ -46,6 +49,7 @@ class HistoriaUsuario (models.Model):
     data_criacao = models.DateField(auto_now_add=True)
     pontos_historia = models.PositiveSmallIntegerField(choices=PONTOS, default=1)
     moscow = models.CharField(max_length=1, choices=MoSCoW.choices)
+    beneficio = models.CharField(max_length=255)
 
     rice_reach = models.PositiveIntegerField()
     rice_impact = models.CharField(max_length=18, choices= Impact.choices)
@@ -64,7 +68,7 @@ class HistoriaUsuario (models.Model):
             return None
         r = Decimal(self.rice_reach)
         i = Decimal(self.rice_impact)
-        c = Decimal(self.rice_confidence)
+        c = Decimal(self.rice_confidence) / 100
         e = Decimal(self.rice_effort)
         return (r*i*c)/e
 
@@ -76,6 +80,6 @@ class CriterioAceitacao(models.Model):
     evento = models.CharField(max_length=255)
     resultado = models.CharField(max_length=255)
 
-    historia_usuario = models.ForeignKey(HistoriaUsuario, on_delete=models.PROTECT,related_name="Criterios")
+    historia_usuario = models.ForeignKey(HistoriaUsuario, on_delete=models.CASCADE, related_name="Criterios")
 
 
