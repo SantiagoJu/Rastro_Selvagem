@@ -1,5 +1,3 @@
-# Rastro_Selvagem
-
 # Rastro Selvagem
 
 ## 1. O que é o sistema?
