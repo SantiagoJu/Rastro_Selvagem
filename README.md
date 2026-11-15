@@ -198,7 +198,7 @@ O arquivo `script.sql` contém definições relacionadas ao banco de dados, enqu
 ## 7. Participantes
 
 
-A relação completa dos participantes responsáveis pelo desenvolvimento:.
+A relação completa dos participantes responsáveis pelo desenvolvimento:
 
 - Angel Flavius Alves Negri;
 - Caio Lucas Borges Nascimento;
