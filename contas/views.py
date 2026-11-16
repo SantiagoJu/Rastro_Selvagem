@@ -14,7 +14,7 @@ class UsuarioCreationForm(UserCreationForm):
 class CadastroView(CreateView):
     form_class = UsuarioCreationForm
     template_name ='contas/cadastro.html'
-    success_url = reverse_lazy('login')
+    success_url = reverse_lazy('contas:login')
 
 class CustomLoginView(LoginView):
     template_name = 'contas/login.html'
